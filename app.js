@@ -61,22 +61,24 @@ app.use("/", indexRoutes);
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+/*
 async function wait() {
    while(true) {
       var time_now = moment().tz("America/Chicago").format(); // 2020-03-28T00:17:38-05:00
       var HH_MM = time_now.substr(11, 5); // 00:17 (hours:minutes)
-      await sleep(5000);
+      await sleep(10000);
       console.log(HH_MM);
       if (HH_MM == "12:57") console.log("YES");
    }
 }
+*/
 
 
 // port of cloud9 environment: process.env.PORT
 app.listen(process.env.PORT, process.env.IP, function(){
    console.log("AI weather Server Has Started!");
 
-   wait();
+   // wait();
    
 });
 
