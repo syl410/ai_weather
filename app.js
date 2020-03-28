@@ -4,6 +4,8 @@
 // require takes the name of a package as a string argument and returns a package
 var express     = require("express");
 
+const {spawn} = require('child_process');
+
 // Calls the express function "express()" and 
 // puts new Express application inside the app var (to start a new Express application). 
 var app         = express();
@@ -15,6 +17,10 @@ var cookieParser = require("cookie-parser");
 var LocalStrategy = require("passport-local");
 
 var methodOverride = require("method-override");
+
+// get current time with specific timezone
+var moment = require('moment-timezone');
+
 var fs = require('fs');
 var multer = require('multer');
 // configure dotenv
@@ -31,6 +37,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 // __dirname is directory path of currently executing js
+// the app will search content in public directory
 app.use(express.static(__dirname + "/public"));
 
 // https://dev.to/moz5691/method-override-for-put-and-delete-in-html-3fp2
@@ -49,7 +56,34 @@ app.use(function(req, res, next){
 
 app.use("/", indexRoutes);
 
+
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+async function wait() {
+   while(true) {
+      var time_now = moment().tz("America/Chicago").format(); // 2020-03-28T00:17:38-05:00
+      var HH_MM = time_now.substr(11, 5); // 00:17 (hours:minutes)
+      await sleep(5000);
+      console.log(HH_MM);
+      if (HH_MM == "12:57") console.log("YES");
+   }
+}
+
+
 // port of cloud9 environment: process.env.PORT
 app.listen(process.env.PORT, process.env.IP, function(){
-   console.log("Austin Secondhand Server Has Started!");
+   console.log("AI weather Server Has Started!");
+
+   wait();
+   
 });
+
+
+// test
+//console.log("hello world!");
+// const myPython = spawn('python', ['./python/hi.py']);
+
+// var time = new Date();
+// console.log(time.getHours() + ":" + time.getMinutes());
