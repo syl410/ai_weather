@@ -85,7 +85,7 @@ app.listen(process.env.PORT, process.env.IP, function(){
 
 // test
 //console.log("hello world!");
-// const myPython = spawn('python', ['./python/hi.py']);
+const myPython = spawn('python', ['./python/hi.py']);
 
 // var time = new Date();
 // console.log(time.getHours() + ":" + time.getMinutes());
