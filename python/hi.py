@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pandas as pd
+#import pandas as pd
 
 fw = open("./python/py_test", 'w')
 
