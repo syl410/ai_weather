@@ -120,16 +120,16 @@ Y_tempMax.shape = len(Y_tempMax), output_num_tempMaxMin
 Y_tempMin.shape = len(Y_tempMin), output_num_tempMaxMin
 
 
-# split data to: 1, train (60%), 2, validation (20%), 3, test (20%)
-# X/Y_*_val_test: temporary set for both validation data and test data
-X_icon_train, X_icon_val_test, Y_icon_train, Y_icon_val_test = train_test_split(X_icon, Y_icon, test_size=0.3, random_state=15)
-X_icon_val, X_icon_test, Y_icon_val, Y_icon_test = train_test_split(X_icon_val_test, Y_icon_val_test, test_size=0.5, random_state=15)
+# split data to: 1, train (70%), 2, validation (15%), 3, test (15%)
+# X/Y_*_test_val: temporary set for both validation data and test data
+X_icon_train, X_icon_test_val, Y_icon_train, Y_icon_test_val = train_test_split(X_icon, Y_icon, test_size=0.3, random_state=15)
+X_icon_test, X_icon_val, Y_icon_test, Y_icon_val = train_test_split(X_icon_test_val, Y_icon_test_val, test_size=0.5, random_state=15)
 
-X_tempMax_train, X_tempMax_val_test, Y_tempMax_train, Y_tempMax_val_test = train_test_split(X_tempMax, Y_tempMax, test_size=0.3, random_state=16)
-X_tempMax_val, X_tempMax_test, Y_tempMax_val, Y_tempMax_test = train_test_split(X_tempMax_val_test, Y_tempMax_val_test, test_size=0.5, random_state=16)
+X_tempMax_train, X_tempMax_test_val, Y_tempMax_train, Y_tempMax_test_val = train_test_split(X_tempMax, Y_tempMax, test_size=0.3, random_state=16)
+X_tempMax_test, X_tempMax_val, Y_tempMax_test, Y_tempMax_val = train_test_split(X_tempMax_test_val, Y_tempMax_test_val, test_size=0.5, random_state=16)
 
-X_tempMin_train, X_tempMin_val_test, Y_tempMin_train, Y_tempMin_val_test = train_test_split(X_tempMin, Y_tempMin, test_size=0.3, random_state=17)
-X_tempMin_val, X_tempMin_test, Y_tempMin_val, Y_tempMin_test = train_test_split(X_tempMin_val_test, Y_tempMin_val_test, test_size=0.5, random_state=17)
+X_tempMin_train, X_tempMin_test_val, Y_tempMin_train, Y_tempMin_test_val = train_test_split(X_tempMin, Y_tempMin, test_size=0.3, random_state=17)
+X_tempMin_test, X_tempMin_val, Y_tempMin_test, Y_tempMin_val = train_test_split(X_tempMin_test_val, Y_tempMin_test_val, test_size=0.5, random_state=17)
 
 print("Training instances - temp   {}".format(X_tempMax_train.shape[0]))
 print("Validation instances - temp {}".format(X_tempMax_val.shape[0]))
@@ -155,7 +155,6 @@ def train_evaluate_predict_func(X, hidden_units, output_num, learning_rate, lamd
 
     error_cost = []
     # train and evaluate
-                                   # 0% -70%  - partial batch
     iter_70 = int(0.7 * iteration) # 70%-90%  - half iteration
     iter_90 = int(0.9 * iteration) # 90%-100% - full iteration
 
@@ -191,29 +190,29 @@ def train_evaluate_predict_func(X, hidden_units, output_num, learning_rate, lamd
         #plt.show()
     
     # prediction
-    test_num = len(Y_test)
-    Y_predict = regressor.predict(X_test)
+    val_num = len(Y_val)
+    Y_predict = regressor.predict(X_val)
     prediction_str = ""
     std_dev = 0
 
     if regression_or_classification == "classification":
         Y_predict_processed = process_Y_predict(Y_predict)
         correct_num = 0
-        for i in range(test_num):
-            if np.array_equal(Y_predict_processed[i], Y_test[i]):
+        for i in range(val_num):
+            if np.array_equal(Y_predict_processed[i], Y_val[i]):
                 correct_num += 1
-        prediction_str = ", icon_prediction_rate: " +  str(round(correct_num / test_num, 2))
+        prediction_str = ", icon_prediction_rate: " +  str(round(correct_num / val_num, 2))
     else:
-        variance = "Exp_Var: " + str(round(explained_variance_score(Y_test, Y_predict), 2)) # explained variance 
-        mean = "Mean_Abs_Err: " + str(round(mean_absolute_error(Y_test, Y_predict), 2))
-        median = "Median_Abs_Err: " + str(round(median_absolute_error(Y_test, Y_predict), 2))
+        variance = "Exp_Var: " + str(round(explained_variance_score(Y_val, Y_predict), 2)) # explained variance 
+        mean = "Mean_Abs_Err: " + str(round(mean_absolute_error(Y_val, Y_predict), 2))
+        median = "Median_Abs_Err: " + str(round(median_absolute_error(Y_val, Y_predict), 2))
         prediction_str = ", " + variance + ", " + mean + ", " + median
-        if mean_absolute_error(Y_test, Y_predict) > 100:
+        if mean_absolute_error(Y_val, Y_predict) > 100:
             prediction_str = ", ERROR"
         # standard deviation
         abs_diff = []
-        for i in range(test_num):
-            abs_diff.append(abs(Y_test[i][0] - Y_predict[i][0]))
+        for i in range(val_num):
+            abs_diff.append(abs(Y_val[i][0] - Y_predict[i][0]))
         std_dev = round(statistics.stdev(abs_diff), 2)
 
         
@@ -227,10 +226,10 @@ def train_evaluate_predict_func(X, hidden_units, output_num, learning_rate, lamd
             prediction_str + 
             ", stdev: " + str(std_dev))
     """ debug
-    print("### X_test")
-    print(X_test[:,[0, 1]])
-    print("### Y_test")
-    print(Y_test)
+    print("### X_val")
+    print(X_val[:,[0, 1]])
+    print("### Y_val")
+    print(Y_val)
     print("### Y_predict")
     print(Y_predict)
     """
