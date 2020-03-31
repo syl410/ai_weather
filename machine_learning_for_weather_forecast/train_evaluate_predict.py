@@ -247,23 +247,16 @@ icon_regression_or_classification = "classification"
 icon_loop_run = False
 icon_print_loss = False
 
-temp_hidden_units_li = [[20, 20]]
-temp_hidden_units_li = [[30, 30]]
-temp_hidden_units_li = [[10, 10]]
-temp_hidden_units_li = [[40, 40]]
-temp_hidden_units_li = [[50, 50]]
 temp_hidden_units_li = [[30, 30], [40, 40]]
 
 tempMax_learning_rate_li = [0.01] # FINAL MAX TMEP
 tempMin_learning_rate_li = [0.006] # FINAL MIN TMEP
-tempMax_learning_rate_li = [0.002, 0.005, 0.01]
-tempMax_learning_rate_li = [0.0005, 0.001]
+tempMax_learning_rate_li = [0.002, 0.004, 0.006, 0.008, 0.01]
 tempMin_learning_rate_li = [0.004, 0.006, 0.008, 0.012]
 
 tempMax_lamda_li = [22] # FINAL MAX TMEP 
 tempMin_lamda_li = [15] # FINAL MIN TMEP
-tempMax_lamda_li = [10, 20, 28]
-tempMax_lamda_li = [10, 20, 28, 30, 34]
+tempMax_lamda_li = [10, 15, 20, 24, 28, 32]
 tempMin_lamda_li = [13, 15, 17] 
 
 temp_scaling_factor_li = [1]
@@ -271,8 +264,8 @@ temp_scaling_factor_li = [1]
 tempMax_iteration_li = [125] # FINAL MAX TMEP
 tempMin_iteration_li = [75] # FINAL MIN TMEP
 tempMax_iteration_li = [20, 50, 100, 200, 300]
-tempMax_iteration_li = [350, 400, 450, 500]
-tempMax_iteration_li = [550, 600, 650]
+tempMax_iteration_li = [170, 200, 230, 260, 300] # TEST2
+tempMax_iteration_li = [20, 50, 80, 110, 140] # TEST1
 tempMin_iteration_li = [50, 75, 100]
 
 
@@ -283,12 +276,7 @@ tempMin_steps_li = [100, 200, 225]
 
 tempMax_batch_num_li = [30] # FINAL MAX TMEP
 tempMin_batch_num_li = [30] # FINAL MIN TMEP
-temp_batch_num_li = [15, 30, 50, 70, 90]
-temp_batch_num_li = [100, 120]
-
-temp_batch_num_li = [50, 70, 90, 100, 120]
-
-
+temp_batch_num_li = [20, 50, 70, 90, 110, 130]
 
 temp_shuffle = True
 temp_regression_or_classification = "regression"
