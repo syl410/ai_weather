@@ -20,6 +20,8 @@ from constant import *
 icon_loop_run = True
 temp_max_loop_run = False
 temp_min_loop_run = False
+# if it is final test, test dataset will be used for evaluating prediction results
+final_test = False
 
 # load pickle file of processed weather data
 file_input = 'data/processed_data.pkl'
@@ -68,6 +70,14 @@ X_tempMax_test, X_tempMax_val, Y_tempMax_test, Y_tempMax_val = train_test_split(
 
 X_tempMin_train, X_tempMin_test_val, Y_tempMin_train, Y_tempMin_test_val = train_test_split(X_tempMin, Y_tempMin, test_size=0.3, random_state=17)
 X_tempMin_test, X_tempMin_val, Y_tempMin_test, Y_tempMin_val = train_test_split(X_tempMin_test_val, Y_tempMin_test_val, test_size=0.5, random_state=17)
+
+if final_test:
+    X_icon_val = X_icon_test
+    Y_icon_val = Y_icon_test
+    X_tempMax_val = X_tempMax_test
+    Y_tempMax_val = Y_tempMax_test
+    X_tempMin_val = X_tempMin_test
+    Y_tempMin_val = Y_tempMin_test
 
 # list size of trainning, validation and testing dataset
 print("Training instances - temp   {}".format(X_tempMax_train.shape[0]))
@@ -177,17 +187,13 @@ def train_evaluate_predict_func(X, hidden_units, output_num, learning_rate, lamd
     """
 
 ########### adjustable number ############
-icon_hidden_units_li = [[20, 20]] # FINAL
-icon_learning_rate_li = [0.07] # FINAL
-icon_learning_rate_li = [0.02, 0.05, 0.06, 0.07, 0.08, 0.1, 0.15]
-icon_lamda_li = [0.1] # FINAL
-icon_lamda_li = [0.08, 0.1, 0.2, 0.5]
-icon_scaling_factor_li = [1] # FINAL
-icon_iteration_li = [150] # FINAL
-icon_iteration_li = [50, 100, 150, 200, 250, 300]
+icon_hidden_units_li = [[20, 20], [30, 30]] # FINAL 20 20?
+icon_learning_rate_li = [0.04, 0.07, 0.1] # FINAL 0.07?
+icon_lamda_li = [0.05, 0.1, 0.2] # FINAL [0.1] ?
+icon_scaling_factor_li = [1] # FINAL 1?
+icon_iteration_li = [100, 150, 200] # FINAL 150 ?
 icon_steps_li = [200] # FINAL
-icon_batch_num_li = [5] # FINAL
-icon_batch_num_li = [5, 10, 20, 30, 40, 50]
+icon_batch_num_li = [3, 5, 10] # FINAL 5 ?
 icon_shuffle = True
 icon_regression_or_classification = "classification"
 icon_print_loss = False

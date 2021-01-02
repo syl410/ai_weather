@@ -89,30 +89,31 @@ ICON_NUM = 8
 X_ICON_FEATURES = [
         'days', 'daytime',
         'icon0_A_1', 'icon1_A_1', 'icon2_A_1', 'icon3_A_1', 'icon4_A_1', 'icon5_A_1', 'icon6_A_1', 'icon7_A_1', 
-        'precipProbability_A_1', 'humidity_A_1', 'cloudCover_A_1', 'temperatureMin_A_1', 'temperatureMax_A_1', 'pressure_A_1', 'windSpeed_A_1', 'windBearing_A_1',
+        'precipProbability_A_1', 'precipIntensity_A_1', 'humidity_A_1', 'cloudCover_A_1', 'temperatureMin_A_1', 'temperatureMax_A_1', 'pressure_A_1', 'windSpeed_A_1', 'windBearing_A_1',
         'icon0_A_2', 'icon1_A_2', 'icon2_A_2', 'icon3_A_2', 'icon4_A_2', 'icon5_A_2', 'icon6_A_2', 'icon7_A_2', 
-        'precipProbability_A_2', 'humidity_A_2', 'cloudCover_A_2', 'temperatureMin_A_2', 'temperatureMax_A_2', 'pressure_A_2', 'windSpeed_A_2', 'windBearing_A_2',
+        'precipProbability_A_2', 'precipIntensity_A_2', 'humidity_A_2', 'cloudCover_A_2', 'temperatureMin_A_2', 'temperatureMax_A_2', 'pressure_A_2', 'windSpeed_A_2', 'windBearing_A_2',
         'icon0_A_3', 'icon1_A_3', 'icon2_A_3', 'icon3_A_3', 'icon4_A_3', 'icon5_A_3', 'icon6_A_3', 'icon7_A_3', 
-        'precipProbability_A_3', 'humidity_A_3', 'cloudCover_A_3', 'temperatureMin_A_3', 'temperatureMax_A_3', 'pressure_A_3', 'windSpeed_A_3', 'windBearing_A_3',
+        'precipProbability_A_3', 'precipIntensity_A_3', 'humidity_A_3', 'cloudCover_A_3', 'temperatureMin_A_3', 'temperatureMax_A_3', 'pressure_A_3', 'windSpeed_A_3', 'windBearing_A_3',
 
-        'precipProbability_L_1', 'humidity_L_1', 'cloudCover_L_1', 'temperatureMin_L_1', 'temperatureMax_L_1', 
-        'precipProbability_S_1', 'humidity_S_1', 'cloudCover_S_1', 'temperatureMin_S_1', 'temperatureMax_S_1', 
-        'precipProbability_B_1', 'humidity_B_1', 'cloudCover_B_1', 'temperatureMin_B_1', 'temperatureMax_B_1', 
-        'precipProbability_T_1', 'humidity_T_1', 'cloudCover_T_1', 'temperatureMin_T_1', 'temperatureMax_T_1', 
+        'precipProbability_L_1', 'precipIntensity_L_1', 'humidity_L_1', 'cloudCover_L_1', 'temperatureMin_L_1', 'temperatureMax_L_1', 
+        'precipProbability_S_1', 'precipIntensity_S_1', 'humidity_S_1', 'cloudCover_S_1', 'temperatureMin_S_1', 'temperatureMax_S_1', 
+        'precipProbability_B_1', 'precipIntensity_B_1', 'humidity_B_1', 'cloudCover_B_1', 'temperatureMin_B_1', 'temperatureMax_B_1', 
+        'precipProbability_T_1', 'precipIntensity_T_1', 'humidity_T_1', 'cloudCover_T_1', 'temperatureMin_T_1', 'temperatureMax_T_1', 
         
         'n_icon0_A_1', 'n_icon1_A_1', 'n_icon2_A_1', 'n_icon3_A_1', 'n_icon4_A_1', 'n_icon5_A_1', 'n_icon6_A_1', 'n_icon7_A_1',
         'n_humidity_A_1', 'n_cloudCover_A_1', 'n_temperature_A_1', 'n_windSpeed_A_1', 'n_pressure_A_1', 'n_windBearing_A_1',
+
         'n_humidity_L_1', 'n_cloudCover_L_1', 'n_temperature_L_1', 'n_windSpeed_L_1',  
         'n_humidity_S_1', 'n_cloudCover_S_1', 'n_temperature_S_1', 'n_windSpeed_S_1',  
         'n_humidity_B_1', 'n_cloudCover_B_1', 'n_temperature_B_1', 'n_windSpeed_B_1',  
-        'n_humidity_T_1', 'n_cloudCover_T_1', 'n_temperature_T_1', 'n_windSpeed_T_1',
-        'n_icon0_A_2', 'n_icon1_A_2', 'n_icon2_A_2', 'n_icon3_A_2', 'n_icon4_A_2', 'n_icon5_A_2', 'n_icon6_A_2', 'n_icon7_A_2'
+        'n_humidity_T_1', 'n_cloudCover_T_1', 'n_temperature_T_1', 'n_windSpeed_T_1'
         ]
 # output feature for icon/weather prediction
 Y_ICON_FEATURE = ['icon0_A', 'icon1_A', 'icon2_A', 'icon3_A', 'icon4_A', 'icon5_A', 'icon6_A', 'icon7_A']
 
 
 # input features for predicting max temperature
+# precipIntensity is better than precipProbability for it tells if it rains and how much it rains
 X_TEMPMAX_FEATURES = [
         'days', 'daytime',
         'past_4_to_7_min_avg', #'past_4_to_7_min_min', 'past_4_to_7_min_max',
