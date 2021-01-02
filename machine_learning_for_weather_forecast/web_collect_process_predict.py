@@ -3,7 +3,7 @@
 """request weather data from 'darksky' website , 
    collect useful feature data and load them in pkl file
 """
-
+print("start running web_collect_process.py")
 import pandas as pd
 import numpy as np
 from sklearn.metrics import explained_variance_score, mean_absolute_error, median_absolute_error
@@ -20,6 +20,7 @@ from neural_network_model import *
 from weather_module import *
 from constant import *
 
+print("start running web_collect_process.py")
 """collect data"""
 collect_times = 2
 year = 2020
