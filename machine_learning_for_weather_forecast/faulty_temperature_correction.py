@@ -21,7 +21,7 @@ with open(file_input, 'rb') as pickle_in:
 os.system(f'mv {file_input} {file_input_bk}')
 
 # transfer to DataFrame
-df = pd.DataFrame(historical_data, columns=features).set_index('date')
+df = pd.DataFrame(historical_data, columns=FEATURES).set_index('date')
 with open(file_output_txt_bk, 'w') as txt_bk_out:
     txt_bk_out.write(df.to_string())
 

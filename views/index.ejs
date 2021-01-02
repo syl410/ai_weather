@@ -1,0 +1,40 @@
+<% include ./partials/header %>
+    <div>
+        <p style="font-size: 300%; color: grey">Austin, TX</p>
+        <p style="font-size: 200%; color: grey"><%=weather_info.what_day%> <%=weather_info.forecast_date%>, <%=weather_info.weather%></p>
+    </div>
+    
+    <p style="margin-left: -0.3em">
+        <img src="/picture/<%=weather_info.weather_icon%>.png" alt="clear!">
+        <span style="font-size: 300%;"><%=weather_info.max_temperature%></span>
+        <span style="font-size: 210%;"><sup>°F</sup></span>
+        <span style="font-size: 150%;">/ <%=weather_info.min_temperature%></span>
+        <span style="font-size: 105%;"><sup>°F</sup></span>
+    </p>
+    <p style="font-size: 80%; color: grey"> - Updated on 22:30 <%=weather_info.updated_date%></p>
+    
+    <p style="margin-left: -0.3em">
+        <img src="/picture/clear-night.png" alt="clear!">
+    </p>
+    <p style="margin-left: -0.3em">
+        <img src="/picture/cloud.png" alt="clear!">
+    </p>
+    <p style="margin-left: -0.3em">
+        <img src="/picture/fog.png" alt="clear!">
+    </p>
+    <p style="margin-left: -0.3em">
+        <img src="/picture/partly-cloudy-day.png" alt="clear!">
+    </p>
+    <p style="margin-left: -0.3em">
+        <img src="/picture/partly-cloudy-day.png" alt="clear!">
+    </p>
+    <p style="margin-left: -0.3em">
+        <img src="/picture/rain.png" alt="clear!">
+    </p>
+    <p style="margin-left: -0.3em">
+        <img src="/picture/sleet.png" alt="clear!">
+    </p>
+    <p style="margin-left: -0.3em">
+        <img src="/picture/snow.png" alt="clear!">
+    </p>
+<% include ./partials/footer %>

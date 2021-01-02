@@ -1,0 +1,4 @@
+node_modules/
+machine_learning_for_weather_forecast/prediction_data/historical_data.txt
+machine_learning_for_weather_forecast/prediction_data/processed_data.txt
+machine_learning_for_weather_forecast/__pycache__

@@ -6,23 +6,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 import sys
+import pickle
 
 from sklearn.utils import shuffle
+from constant import *
 
-icon_num = 8
+# to print numpy array nicely
+np.set_printoptions(threshold=sys.maxsize)
 
 def num_to_one_hot(Y_origin):
     """create the one-hot encoded vector array"""
-    one_hot_Y = np.zeros((Y_origin.shape[0], icon_num))
+    one_hot_Y = np.zeros((Y_origin.shape[0], ICON_NUM))
     for i in range(Y_origin.shape[0]):
         one_hot_Y[i, Y_origin[i]] = 1
     return one_hot_Y
 
 def process_Y_predict(Y_predict):
     """process Y_predict result for icon prediction;
-    Y_predict is (m, n), m is number of data set, n is icon_num;
+    Y_predict is (m, n), m is number of data set, n is ICON_NUM;
     The function will find max element and set the corresponding index in one hot list to 1"""
-    one_hot_Y = np.zeros((Y_predict.shape[0], icon_num))
+    one_hot_Y = np.zeros((Y_predict.shape[0], ICON_NUM))
     for i in range(Y_predict.shape[0]):
         a_list = Y_predict[i].tolist()
         one_hot_Y[i, a_list.index(max(a_list))] = 1
@@ -47,27 +50,29 @@ class NN_regressor:
         """get mean and range of each cols for feature scaling"""
         row = X.shape[0] # num of dataset
         col = self.feature_num # feature number
-        sum_min_max = np.zeros((col, 3)) # sum(avg), min, max
+        self.sum_min_max = np.zeros((col, 3)) # sum(avg), min, max
         self.X_mean_and_range = np.zeros((col, 2)) # mean, range
 
         # accumulate sum, get min and max of each feature
         for j in range(col):
-            sum_min_max[j][1] = value = X[0][j]
-            sum_min_max[j][2] = value = X[0][j]
+            self.sum_min_max[j][1] = value = X[0][j]
+            self.sum_min_max[j][2] = value = X[0][j]
             for i in range(row):
                 value = X[i][j]
-                sum_min_max[j][0] += value
-                if value < sum_min_max[j][1]:
-                    sum_min_max[j][1] = value
-                if value > sum_min_max[j][2]:
-                    sum_min_max[j][2] = value
+                self.sum_min_max[j][0] += value
+                if value < self.sum_min_max[j][1]:
+                    self.sum_min_max[j][1] = value
+                if value > self.sum_min_max[j][2]:
+                    self.sum_min_max[j][2] = value
 
         # calculate mean and range
         for j in range(col):
             # mean
-            self.X_mean_and_range[j][0] = sum_min_max[j][0] / row
-            # range
-            self.X_mean_and_range[j][1] = sum_min_max[j][2] - sum_min_max[j][1]
+            self.X_mean_and_range[j][0] = self.sum_min_max[j][0] / row
+            # range, if range is 0, change it to 1 to avoid dividing 0
+            self.X_mean_and_range[j][1] = self.sum_min_max[j][2] - self.sum_min_max[j][1]
+            if self.X_mean_and_range[j][1] == 0:
+                self.X_mean_and_range[j][1] = 1
 
     def create_theta_bias(self, hidden_units, feature_num, output_num):
         """create theta list which contains theta_num theta arrays
@@ -158,27 +163,29 @@ class NN_regressor:
             nn_z.append(zero_arr)
         return nn_a, nn_z
 
-    def classification_forward_propagation(self, x, nn_a, nn_z):
+    def classification_forward_propagation(self, x, nn_a, nn_z, theta, bias):
         """update nn_a, nn_z with forward propagation"""
         nn_a[0] = x
         # m a1, nn_a[0] is m x feature_num
         # use m for loop will be too slow, use matrix so CPU can do parallel computing
         # l is layer
         # np.dot: dot product for two vectors / matrix multiplication for arrays
-        # z is array: each row is one z set 
-        for l in range(self.theta_num):
-            nn_z[l + 1] = np.dot(nn_a[l], self.theta[l]) + self.bias[l]
-            if l != self.theta_num - 1:
+        # z is array: each row is one z set
+        theta_num = len(theta)
+        for l in range(theta_num):
+            nn_z[l + 1] = np.dot(nn_a[l], theta[l]) + bias[l]
+            if l != theta_num - 1:
                 nn_a[l + 1] = self.sigmoid(nn_z[l + 1])
             else:
                 nn_a[l + 1] = self.softmax(nn_z[l + 1])
 
-    def regression_forward_propagation(self, x, nn_a, nn_z):
+    def regression_forward_propagation(self, x, nn_a, nn_z, theta, bias):
         """update nn_a, nn_z with forward propagation"""
         nn_a[0] = x
-        for l in range(self.theta_num):
-            nn_z[l + 1] = np.dot(nn_a[l], self.theta[l]) + self.bias[l]
-            if l != self.theta_num - 1:
+        theta_num = len(theta)
+        for l in range(theta_num):
+            nn_z[l + 1] = np.dot(nn_a[l], theta[l]) + bias[l]
+            if l != theta_num - 1:
                 nn_a[l + 1] = self.tanh(nn_z[l + 1])
             else:
                 nn_a[l + 1] = nn_z[l + 1]
@@ -221,6 +228,9 @@ class NN_regressor:
         col = self.feature_num
         X = np.zeros((row, col))
         for j in range(col):
+            # skip one hot value
+            if self.sum_min_max[j][1] == 0 and (self.sum_min_max[j][2] == 0 or self.sum_min_max[j][2] == 1):
+                continue
             X[:, j] = (X_origin[:, j] - self.X_mean_and_range[j][0]) / self.X_mean_and_range[j][1] * self.scaling_factor
         return X
 
@@ -242,6 +252,7 @@ class NN_regressor:
             Y = Y[randomize]
 
         batch_size, batch_x, batch_y = self.get_batch_size_and_split_x_y(X, Y, batch_num)
+        batch_size = max(1, batch_size)
         lr = self.lr_init
         nn_a, nn_z = self.create_empty_nna_nnz(batch_size)
 
@@ -252,12 +263,12 @@ class NN_regressor:
 
             if self.regression_or_classification == "classification":
                 ### Forward Propagation
-                self.classification_forward_propagation(x, nn_a, nn_z)
+                self.classification_forward_propagation(x, nn_a, nn_z, self.theta, self.bias)
                 ### Back Propagation
                 # update sefl.dJ_dtheta, self.dJ_db
                 self.classification_back_propagation(x, y, nn_a, nn_z, batch_size)
             else:
-                self.regression_forward_propagation(x, nn_a, nn_z)
+                self.regression_forward_propagation(x, nn_a, nn_z, self.theta, self.bias)
                 self.regression_back_propagation(x, y, nn_a, nn_z, batch_size)
 
             ### Update Weights
@@ -282,19 +293,30 @@ class NN_regressor:
         nn_a, nn_z = self.create_empty_nna_nnz(X_len)
         square_sum = self.theta_square()
         if self.regression_or_classification == "classification":
-            self.classification_forward_propagation(X, nn_a, nn_z)
+            self.classification_forward_propagation(X, nn_a, nn_z, self.theta, self.bias)
             loss = (np.sum(-Y * np.log(nn_a[self.layer_num - 1])) + self.lamda * square_sum / 2) / X_len
         else:
-            self.regression_forward_propagation(X, nn_a, nn_z)
+            self.regression_forward_propagation(X, nn_a, nn_z, self.theta, self.bias)
             loss = (np.sum(np.square(nn_a[self.layer_num - 1] - Y)) + self.lamda * square_sum) / (2 * X_len)
         return loss
 
-    def predict(self, X_origin):
+    def predict(self, X_origin, theta, bias):
         """using TEST dataset as input to do prediction"""
+        if theta is None:
+            theta = self.theta
+        if bias is None:
+            bias = self.bias
         X = self.feature_scaling(X_origin)
         nn_a, nn_z = self.create_empty_nna_nnz(len(X))
         if self.regression_or_classification == "classification":
-            self.classification_forward_propagation(X, nn_a, nn_z) # [0.1, 0,89, ...]
+            self.classification_forward_propagation(X, nn_a, nn_z, theta, bias) # [0.1, 0,89, ...]
         else:
-            self.regression_forward_propagation(X, nn_a, nn_z)
-        return nn_a[self.layer_num - 1]
+            self.regression_forward_propagation(X, nn_a, nn_z, theta, bias)
+        return nn_a[len(theta)] # theta size is self.layer_num - 1
+
+    def save_weight(self, category):
+        """dump theta and bias for every day prediction"""
+        with open("prediction_data/" + category + "_theta.pkl", 'wb') as theta_f:
+            pickle.dump(self.theta, theta_f)
+        with open("prediction_data/" + category + "_bias.pkl", 'wb') as bias_f:
+            pickle.dump(self.bias, bias_f)

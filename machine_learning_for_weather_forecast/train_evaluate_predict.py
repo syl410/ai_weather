@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 """use NN api to train historical weather; evaluate NN models; predict weather"""
 
 import pandas as pd
@@ -9,119 +8,58 @@ from sklearn.metrics import explained_variance_score, mean_absolute_error, media
 from sklearn.model_selection import train_test_split
 import pickle
 import statistics
-
 import matplotlib.pyplot as plt
 import os
-
 import random
 
 from neural_network_model import *
-
 from weather_module import *
+from constant import *
+
+# select weather/max temperature/min temperature to train
+icon_loop_run = True
+temp_max_loop_run = False
+temp_min_loop_run = False
 
 # load pickle file of processed weather data
 file_input = 'data/processed_data.pkl'
 with open(file_input, 'rb') as pickle_f_in:
     df = pickle.load(pickle_f_in)
 
-# icon feature
-X_icon_features = [
-        'years', 'days', 'daytime',
-        'history_avg_min', 'history_avg_max',
-        'past_4_to_7_min_avg',
-        'past_4_to_7_max_avg',
+# if true, dump theta and bias for every day prediction
+save_weight = True
 
-        'precipProbability_A_1', 'humidity_A_1', 'cloudCover_A_1', 'temperatureMin_A_1', 'temperatureMax_A_1', 'pressure_A_1', 'windSpeed_A_1', 'windBearing_A_1',
-        'precipProbability_A_2', 'humidity_A_2', 'cloudCover_A_2', 'temperatureMin_A_2', 'temperatureMax_A_2', 'pressure_A_2', 'windSpeed_A_2', 'windBearing_A_2',
-        'precipProbability_A_3', 'humidity_A_3', 'cloudCover_A_3', 'temperatureMin_A_3', 'temperatureMax_A_3', 'pressure_A_3', 'windSpeed_A_3', 'windBearing_A_3',
+# X_ICON_FEATURES: icon feature
+# Y_ICON_FEATURE: output feature for icon/weather prediction
 
-        'precipProbability_L_1', 'humidity_L_1', 'cloudCover_L_1', 'temperatureMin_L_1', 'temperatureMax_L_1', 
-        'precipProbability_S_1', 'humidity_S_1', 'cloudCover_S_1', 'temperatureMin_S_1', 'temperatureMax_S_1', 
-        'precipProbability_B_1', 'humidity_B_1', 'cloudCover_B_1', 'temperatureMin_B_1', 'temperatureMax_B_1', 
-        'precipProbability_T_1', 'humidity_T_1', 'cloudCover_T_1', 'temperatureMin_T_1', 'temperatureMax_T_1', 
-        
-        'n_humidity_A_1', 'n_cloudCover_A_1', 'n_temperature_A_1', 'n_windSpeed_A_1', 'n_pressure_A_1', 'n_windBearing_A_1', 
-        'n_humidity_L_1', 'n_cloudCover_L_1', 'n_temperature_L_1', 'n_windSpeed_L_1',  
-        'n_humidity_S_1', 'n_cloudCover_S_1', 'n_temperature_S_1', 'n_windSpeed_S_1',  
-        'n_humidity_B_1', 'n_cloudCover_B_1', 'n_temperature_B_1', 'n_windSpeed_B_1',  
-        'n_humidity_T_1', 'n_cloudCover_T_1', 'n_temperature_T_1', 'n_windSpeed_T_1',  
-        'n_temperature_A_2',
-        ]
+# X_TEMPMAX_FEATURES: input features for predicting max temperature
+# Y_TEMPMAX_FEATURE: output feature for max temperature prediction
 
-# features for predicting max temperature
-X_tempMax_features = [
-        'years', 'days', 'daytime',
-        'history_avg_min', 'history_avg_max',
-        'past_4_to_7_min_avg', #'past_4_to_7_min_min', 'past_4_to_7_min_max',
-        'past_4_to_7_max_avg', 'past_4_to_7_max_min', 'past_4_to_7_max_max',
-
-        'precipIntensity_A_1', 'humidity_A_1', 'cloudCover_A_1', 'temperatureMin_A_1', 'temperatureMax_A_1', 'pressure_A_1', 'windSpeed_A_1', 'windBearing_A_1',
-        'precipIntensity_A_2', 'humidity_A_2', 'cloudCover_A_2', 'temperatureMin_A_2', 'temperatureMax_A_2', 'pressure_A_2', 'windSpeed_A_2', 'windBearing_A_2',
-        'precipIntensity_A_3', 'humidity_A_3', 'cloudCover_A_3', 'temperatureMin_A_3', 'temperatureMax_A_3', 'pressure_A_3', 'windSpeed_A_3', 'windBearing_A_3',
-
-        'precipIntensity_L_1', 'humidity_L_1', 'cloudCover_L_1', 'temperatureMin_L_1', 'temperatureMax_L_1', #'windSpeed_L_1', 'pressure_L_1', 'windBearing_L_1',
-        'precipIntensity_S_1', 'humidity_S_1', 'cloudCover_S_1', 'temperatureMin_S_1', 'temperatureMax_S_1', #'windSpeed_S_1', 'pressure_S_1', 'windBearing_S_1',
-        'precipIntensity_B_1', 'humidity_B_1', 'cloudCover_B_1', 'temperatureMin_B_1', 'temperatureMax_B_1', #'windSpeed_B_1', 'pressure_B_1', 'windBearing_B_1',
-        'precipIntensity_T_1', 'humidity_T_1', 'cloudCover_T_1', 'temperatureMin_T_1', 'temperatureMax_T_1', #'windSpeed_T_1', 'pressure_T_1', 'windBearing_T_1',
-        
-        'n_humidity_A_1', 'n_cloudCover_A_1', 'n_temperature_A_1', 'n_windSpeed_A_1', 'n_pressure_A_1', 'n_windBearing_A_1', 
-        'n_humidity_L_1', 'n_cloudCover_L_1', 'n_temperature_L_1', 'n_windSpeed_L_1', #'n_pressure_L_1', # 'n_windBearing_L_1', 
-        'n_humidity_S_1', 'n_cloudCover_S_1', 'n_temperature_S_1', 'n_windSpeed_S_1', #'n_pressure_S_1', # 'n_windBearing_S_1', 
-        'n_humidity_B_1', 'n_cloudCover_B_1', 'n_temperature_B_1', 'n_windSpeed_B_1', #'n_pressure_B_1', # 'n_windBearing_B_1', 
-        'n_humidity_T_1', 'n_cloudCover_T_1', 'n_temperature_T_1', 'n_windSpeed_T_1', #'n_pressure_T_1', # 'n_windBearing_T_1', 
-        'n_temperature_A_2',
-        ]
-
-# features for predicting min temperature
-X_tempMin_features = [
-        'years', 'days', 'daytime',
-        'history_avg_min', 'history_avg_max',
-        'past_4_to_7_min_avg', 'past_4_to_7_min_min', 'past_4_to_7_min_max',
-        'past_4_to_7_max_avg', #'past_4_to_7_max_min', 'past_4_to_7_max_max',
-
-        'precipIntensity_A_1', 'humidity_A_1', 'cloudCover_A_1', 'temperatureMin_A_1', 'temperatureMax_A_1', 'pressure_A_1', 'windSpeed_A_1', 'windBearing_A_1',
-        'precipIntensity_A_2', 'humidity_A_2', 'cloudCover_A_2', 'temperatureMin_A_2', 'temperatureMax_A_2', 'pressure_A_2', 'windSpeed_A_2', 'windBearing_A_2',
-        'precipIntensity_A_3', 'humidity_A_3', 'cloudCover_A_3', 'temperatureMin_A_3', 'temperatureMax_A_3', 'pressure_A_3', 'windSpeed_A_3', 'windBearing_A_3',
-
-        'precipIntensity_L_1', 'humidity_L_1', 'cloudCover_L_1', 'temperatureMin_L_1', 'temperatureMax_L_1', #'windSpeed_L_1', 'pressure_L_1', 'windBearing_L_1',
-        'precipIntensity_S_1', 'humidity_S_1', 'cloudCover_S_1', 'temperatureMin_S_1', 'temperatureMax_S_1', #'windSpeed_S_1', 'pressure_S_1', 'windBearing_S_1',
-        'precipIntensity_B_1', 'humidity_B_1', 'cloudCover_B_1', 'temperatureMin_B_1', 'temperatureMax_B_1', #'windSpeed_B_1', 'pressure_B_1', 'windBearing_B_1',
-        'precipIntensity_T_1', 'humidity_T_1', 'cloudCover_T_1', 'temperatureMin_T_1', 'temperatureMax_T_1', #'windSpeed_T_1', 'pressure_T_1', 'windBearing_T_1',
-        
-        'n_humidity_A_1', 'n_cloudCover_A_1', 'n_temperature_A_1', 'n_windSpeed_A_1', 'n_pressure_A_1', 'n_windBearing_A_1', 
-        'n_humidity_L_1', 'n_cloudCover_L_1', 'n_temperature_L_1', 'n_windSpeed_L_1', #'n_pressure_L_1', # 'n_windBearing_L_1', 
-        'n_humidity_S_1', 'n_cloudCover_S_1', 'n_temperature_S_1', 'n_windSpeed_S_1', #'n_pressure_S_1', # 'n_windBearing_S_1', 
-        'n_humidity_B_1', 'n_cloudCover_B_1', 'n_temperature_B_1', 'n_windSpeed_B_1', #'n_pressure_B_1', # 'n_windBearing_B_1', 
-        'n_humidity_T_1', 'n_cloudCover_T_1', 'n_temperature_T_1', 'n_windSpeed_T_1', #'n_pressure_T_1', # 'n_windBearing_T_1', 
-        'n_temperature_A_2',
-        ]
-
-# Y name for icon, tempMax, and tempMin
-Y_icon_feature = 'icon_A'
-Y_tempMax_feature = 'temperatureMax_A'
-Y_tempMin_feature = 'temperatureMin_A'
+# X_TEMPMIN_FEATURES: input features for predicting min temperature
+# Y_TEMPMIN_FEATURE output feature for min temperature prediction
 
 # X_icon is numpy.ndarray: (number of data set, number features)
-X_icon = df[X_icon_features].to_numpy()[start_train_day :]
-Y_icon_origin = df[Y_icon_feature].to_numpy()[start_train_day :]
-# Y_icon is numpy.ndarray: (number of data set, icon_num), a Y_icon is like [0,1,0..0]
-Y_icon = num_to_one_hot(Y_icon_origin)
-output_num_icon = Y_icon.shape[1]
+X_icon = df[X_ICON_FEATURES].to_numpy()[start_train_day :]
+# Y_icon is numpy.ndarray: (number of data set, icon_num), a Y_icon is like [[0,1,0..0], ...]
+Y_icon = df[Y_ICON_FEATURE].to_numpy()[start_train_day :]
+# Y_icon = num_to_one_hot(Y_icon_origin)
+Y_icon_num = Y_icon.shape[1]
 
 # X_tempMax/X_tempMin is numpy.ndarray: (number of data set, number of features)
-X_tempMax = df[X_tempMax_features].to_numpy()[start_train_day :]
-X_tempMin = df[X_tempMin_features].to_numpy()[start_train_day :]
+X_tempMax = df[X_TEMPMAX_FEATURES].to_numpy()[start_train_day :]
+X_tempMin = df[X_TEMPMIN_FEATURES].to_numpy()[start_train_day :]
 # Y_tempMax/Y_tempMin is numpy.ndarray: (number of data set,), it is like a list
-Y_tempMax = df[Y_tempMax_feature].to_numpy()[start_train_day :]
-Y_tempMin = df[Y_tempMin_feature].to_numpy()[start_train_day :]
-output_num_tempMaxMin = 1
+Y_tempMax = df[Y_TEMPMAX_FEATURE].to_numpy()[start_train_day :]
+Y_tempMin = df[Y_TEMPMIN_FEATURE].to_numpy()[start_train_day :]
+Y_tempMaxMin_num = 1
 # reshape: 1xn -> nx1
-Y_tempMax.shape = len(Y_tempMax), output_num_tempMaxMin
-Y_tempMin.shape = len(Y_tempMin), output_num_tempMaxMin
-
+Y_tempMax.shape = len(Y_tempMax), Y_tempMaxMin_num
+Y_tempMin.shape = len(Y_tempMin), Y_tempMaxMin_num
 
 # split data to: 1, train (70%), 2, validation (15%), 3, test (15%)
 # X/Y_*_test_val: temporary set for both validation data and test data
+print(X_icon.shape)
+print(Y_icon.shape)
 X_icon_train, X_icon_test_val, Y_icon_train, Y_icon_test_val = train_test_split(X_icon, Y_icon, test_size=0.3, random_state=15)
 X_icon_test, X_icon_val, Y_icon_test, Y_icon_val = train_test_split(X_icon_test_val, Y_icon_test_val, test_size=0.5, random_state=15)
 
@@ -131,6 +69,7 @@ X_tempMax_test, X_tempMax_val, Y_tempMax_test, Y_tempMax_val = train_test_split(
 X_tempMin_train, X_tempMin_test_val, Y_tempMin_train, Y_tempMin_test_val = train_test_split(X_tempMin, Y_tempMin, test_size=0.3, random_state=17)
 X_tempMin_test, X_tempMin_val, Y_tempMin_test, Y_tempMin_val = train_test_split(X_tempMin_test_val, Y_tempMin_test_val, test_size=0.5, random_state=17)
 
+# list size of trainning, validation and testing dataset
 print("Training instances - temp   {}".format(X_tempMax_train.shape[0]))
 print("Validation instances - temp {}".format(X_tempMax_val.shape[0]))
 print("Testing instances - temp    {}".format(X_tempMax_test.shape[0]))
@@ -144,7 +83,8 @@ print("Validation features - temp  {}".format(X_tempMin_val.shape[1]))
 print("Testing features - temp     {}".format(X_tempMin_test.shape[1]))
 
 def train_evaluate_predict_func(X, hidden_units, output_num, learning_rate, lamda, scaling_factor,
-        X_train, Y_train, shuffle, steps, batch_num, X_val, Y_val, X_test, Y_test, iteration, regression_or_classification, print_loss, print_CPU):
+        X_train, Y_train, shuffle, steps, batch_num, X_val, Y_val, X_test, Y_test, 
+        iteration, regression_or_classification, category, print_loss, print_CPU):
     """train NN, evaluate result and predict
        X is all x data, output_num is num of output
        iteration*steps = total num of partial/full batchs. Different iterations could have different batch num.
@@ -191,7 +131,7 @@ def train_evaluate_predict_func(X, hidden_units, output_num, learning_rate, lamd
     
     # prediction
     val_num = len(Y_val)
-    Y_predict = regressor.predict(X_val)
+    Y_predict = regressor.predict(X_val, None, None)
     prediction_str = ""
     std_dev = 0
 
@@ -215,6 +155,8 @@ def train_evaluate_predict_func(X, hidden_units, output_num, learning_rate, lamd
             abs_diff.append(abs(Y_val[i][0] - Y_predict[i][0]))
         std_dev = round(statistics.stdev(abs_diff), 2)
 
+    if save_weight:
+        regressor.save_weight(category)
         
     print(  "hidden_units: " +  str(hidden_units).replace(" ", "") +
             ", lr: " +  str(learning_rate) +
@@ -235,16 +177,19 @@ def train_evaluate_predict_func(X, hidden_units, output_num, learning_rate, lamd
     """
 
 ########### adjustable number ############
-icon_hidden_units_li = [[10, 10]]
-icon_learning_rate_li = [0.07]
-icon_lamda_li = [0.1]
-icon_scaling_factor_li = [1]
-icon_iteration_li = [150]
-icon_steps_li = [200]
-icon_batch_num_li = [5]
+icon_hidden_units_li = [[20, 20]] # FINAL
+icon_learning_rate_li = [0.07] # FINAL
+icon_learning_rate_li = [0.02, 0.05, 0.06, 0.07, 0.08, 0.1, 0.15]
+icon_lamda_li = [0.1] # FINAL
+icon_lamda_li = [0.08, 0.1, 0.2, 0.5]
+icon_scaling_factor_li = [1] # FINAL
+icon_iteration_li = [150] # FINAL
+icon_iteration_li = [50, 100, 150, 200, 250, 300]
+icon_steps_li = [200] # FINAL
+icon_batch_num_li = [5] # FINAL
+icon_batch_num_li = [5, 10, 20, 30, 40, 50]
 icon_shuffle = True
 icon_regression_or_classification = "classification"
-icon_loop_run = False
 icon_print_loss = False
 
 temp_hidden_units_li = [[30, 30], [40, 40]]
@@ -280,8 +225,6 @@ temp_batch_num_li = [20, 50, 70, 90, 110, 130]
 
 temp_shuffle = True
 temp_regression_or_classification = "regression"
-temp_max_loop_run = True
-temp_min_loop_run = False
 temp_print_loss = False
 
 temp_max_seq_run = False
@@ -304,6 +247,7 @@ def train_loop( hidden_units_li,
                 Y_test,
                 shuffle,
                 regression_or_classification,
+                category,
                 print_loss,
                 print_CPU):
     for hidden_units in hidden_units_li:
@@ -331,6 +275,7 @@ def train_loop( hidden_units_li,
                                         Y_test = Y_test,
                                         iteration = iteration,
                                         regression_or_classification = regression_or_classification,
+                                        category = category,
                                         print_loss = print_loss,
                                         print_CPU = print_CPU)
 
@@ -343,7 +288,7 @@ if icon_loop_run == True:
                 icon_steps_li,
                 icon_batch_num_li,
                 X = X_icon,
-                output_num = output_num_icon,
+                output_num = Y_icon_num,
                 X_train = X_icon_train,
                 Y_train = Y_icon_train,
                 X_val = X_icon_val,
@@ -352,6 +297,7 @@ if icon_loop_run == True:
                 Y_test = Y_icon_test,
                 shuffle = icon_shuffle,
                 regression_or_classification = icon_regression_or_classification,
+                category = "icon",
                 print_loss = icon_print_loss,
                 print_CPU = False)
 
@@ -364,7 +310,7 @@ if temp_max_loop_run == True:
                 tempMax_steps_li,
                 temp_batch_num_li,
                 X = X_tempMax,
-                output_num = output_num_tempMaxMin,
+                output_num = Y_tempMaxMin_num,
                 X_train = X_tempMax_train,
                 Y_train = Y_tempMax_train,
                 X_val = X_tempMax_val,
@@ -373,6 +319,7 @@ if temp_max_loop_run == True:
                 Y_test = Y_tempMax_test,
                 shuffle = temp_shuffle,
                 regression_or_classification = temp_regression_or_classification,
+                category = "max_temperature",
                 print_loss = temp_print_loss,
                 print_CPU = False)
 
@@ -385,7 +332,7 @@ if temp_min_loop_run == True:
                 tempMin_steps_li,
                 temp_batch_num_li,
                 X = X_tempMin,
-                output_num = output_num_tempMin,
+                output_num = Y_tempMaxMin_num,
                 X_train = X_tempMin_train,
                 Y_train = Y_tempMin_train,
                 X_val = X_tempMin_val,
@@ -394,5 +341,6 @@ if temp_min_loop_run == True:
                 Y_test = Y_tempMin_test,
                 shuffle = temp_shuffle,
                 regression_or_classification = temp_regression_or_classification,
+                category = "min_temperature",
                 print_loss = temp_print_loss,
                 print_CPU = False)

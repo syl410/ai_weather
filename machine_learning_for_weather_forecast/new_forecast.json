@@ -1,0 +1,9 @@
+{
+	"what_day" : "Saturday",
+	"forecast_date" : "1/2",
+	"updated_date" : "1/1",
+	"weather" : "clear day",
+	"weather_icon" : "clear-day",
+	"max_temperature" : "49",
+	"min_temperature" : "33"
+}

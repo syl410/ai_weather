@@ -7,73 +7,21 @@
 from datetime import datetime, timedelta
 import time
 from collections import namedtuple
+from constant import *
 import pandas as pd
 import requests
 import matplotlib.pyplot as plt
 import pickle
+import os
 import os.path
 import json
 import sys
+import random
 
-# API KEYS for "darksky" web
-API_KEY_Austin = '4778c8e06b15f3691b07cbccda46b8fe'
-API_KEY_Llano = 'c499aaf8c23a151dafffb5135240df81'
-API_KEY_SanAntonio = 'd2480b9c724e6685640f49b7db6d6f37'
-API_KEY_Brenham = 'b898ce9e4ad35c66c2d2dae30f31c722'
-API_KEY_Temple = 'd42bc3137b5e37d84e89d6a695d6b740'
-
-# longitude and latitude for cities
-# Austin is the city to predict weather
-# rest of cities are surrounding cities
-LOCATION_Austin = '30.2711,-97.7437'
-LOCATION_Llano = '30.7102,-98.6841'
-LOCATION_SanAntonio = '29.5444,-98.4147'
-LOCATION_Brenham ='30.1768,-96.3965'
-LOCATION_Temple = '31.0982,-97.3428'
-
-BASE_URL = "https://api.darksky.net/forecast/{}/{},{}T00:00:00?exclude=currently,flag"
-#https://api.darksky.net/forecast/4778c8e06b15f3691b07cbccda46b8fe/30.2711,-97.7437,2016-05-16T00:00:00?exclude=currently,hourly,flags
-#https://api.darksky.net/forecast/4778c8e06b15f3691b07cbccda46b8fe/30.2711,-97.7437,2016-05-16T00:00:00?exclude=currently,flags
-
-
-# https://darksky.net/dev/docs#time-machine-request
-
-# weather features
-# _A: Austin, _L: Llano, _S: SanAntonio, _B: Brenham, _T: Temple
-# n_*: night features at 10pm
-features = ["date", "daytime", 
-        "icon_A", "precipProbability_A", "precipIntensity_A", "humidity_A", "cloudCover_A", "visibility_A", "temperatureMin_A", "temperatureMax_A", "windSpeed_A", "windBearing_A", "pressure_A", "dewPoint_A", 
-        "n_icon_A", "n_precipProbability_A", "n_precipIntensity_A", "n_humidity_A", "n_cloudCover_A", "n_visibility_A", "n_temperature_A", "n_windSpeed_A", "n_windBearing_A", "n_pressure_A", "n_dewPoint_A",
-
-        "icon_L", "precipProbability_L", "precipIntensity_L", "humidity_L", "cloudCover_L", "visibility_L", "temperatureMin_L", "temperatureMax_L", "windSpeed_L", "windBearing_L", "pressure_L", "dewPoint_L", 
-        "n_icon_L", "n_precipProbability_L", "n_precipIntensity_L", "n_humidity_L", "n_cloudCover_L", "n_visibility_L", "n_temperature_L", "n_windSpeed_L", "n_windBearing_L", "n_pressure_L", "n_dewPoint_L",
-
-        "icon_S", "precipProbability_S", "precipIntensity_S", "humidity_S", "cloudCover_S", "visibility_S", "temperatureMin_S", "temperatureMax_S", "windSpeed_S", "windBearing_S", "pressure_S", "dewPoint_S", 
-        "n_icon_S", "n_precipProbability_S", "n_precipIntensity_S", "n_humidity_S", "n_cloudCover_S", "n_visibility_S", "n_temperature_S", "n_windSpeed_S", "n_windBearing_S", "n_pressure_S", "n_dewPoint_S",
-
-        "icon_B", "precipProbability_B", "precipIntensity_B", "humidity_B", "cloudCover_B", "visibility_B", "temperatureMin_B", "temperatureMax_B", "windSpeed_B", "windBearing_B", "pressure_B", "dewPoint_B", 
-        "n_icon_B", "n_precipProbability_B", "n_precipIntensity_B", "n_humidity_B", "n_cloudCover_B", "n_visibility_B", "n_temperature_B", "n_windSpeed_B", "n_windBearing_B", "n_pressure_B", "n_dewPoint_B",
-
-        "icon_T", "precipProbability_T", "precipIntensity_T", "humidity_T", "cloudCover_T", "visibility_T", "temperatureMin_T", "temperatureMax_T", "windSpeed_T", "windBearing_T", "pressure_T", "dewPoint_T", 
-        "n_icon_T", "n_precipProbability_T", "n_precipIntensity_T", "n_humidity_T", "n_cloudCover_T", "n_visibility_T", "n_temperature_T", "n_windSpeed_T", "n_windBearing_T", "n_pressure_T", "n_dewPoint_T"
-]
-
-icons = {"clear-day":0, "clear-night":0, "partly-cloudy-day":1, "partly-cloudy-night":1, "cloudy":2, "rain":3, "wind":4, "fog":5, "sleet":6, "snow":7}
+start_train_day = 1 + MAX_N
 
 # namedtuple class for features
-DailySummary = namedtuple("DailySummary", features)
-
-# max previous days 
-max_N = 3
-
-half_his_days = 10
-days_a_year = 365
-
-# skip first  3years + one day in leap year + half_history_days + max_N
-# these days have no historic average data
-# his_years is num of years to calculate average temperature
-his_years = 3
-start_train_day = days_a_year * his_years + 1 + half_his_days + max_N
+DailySummary = namedtuple("DailySummary", FEATURES)
 
 """
 response.json format:
@@ -89,6 +37,119 @@ response.json format:
     }
 }
 """
+
+def collect_data_func(collect_times, year, month, day, file_output, force_restart, isWeb):
+    """request weather data from 'darksky' website , 
+       collect useful feature data and load them in pkl file
+
+    Args:
+        collect_times: num of times to collect weather info from web
+        isWeb: False if it is for training and True if it is for web app
+    """
+    start_date = datetime(year, month, day)
+    start_date_bk = start_date
+    
+    now = datetime.now()
+    
+    # historical weather data
+    historical_data = pd.DataFrame()
+    
+    # if file_output exists
+    # get first_day and last_day from collect historical weather data
+    # if start_date is after last_day, df will be cleaned and re-generated
+    # otherwise start_date is the last_day + 1
+    # if start_date is before first_day, program will still start from last_day + 1,
+    # unless force_restart = True
+    if os.path.isfile(file_output):
+        with open(file_output, 'rb') as f_origin:
+            historical_data = pickle.load(f_origin) # historical_data is DataFrame
+    
+        df = pd.DataFrame(historical_data, columns=FEATURES)
+        start_date, first_day, last_day, clean_df = get_start_day_first_day_last_day(df, start_date)
+        if clean_df == 1 or force_restart: # ignore previous historical_data
+            historical_data = pd.DataFrame()
+        if force_restart:
+            start_date = start_date_bk
+        if not isWeb: # for web app, it doesn't need to backup
+            os.system(f'mv {file_output} {file_output}_{first_day}__{last_day}')
+    
+    # check if 
+    # 1, start_date is later than today
+    # 2, end_day is later than today
+    today = datetime(now.year, now.month, now.day)
+    end_day = start_date + timedelta(days=(collect_times - 1))
+    if start_date > today:
+        print(f'start_date {start_date} is later than today {today}')
+    else:
+        if end_day > today:
+            collect_times = (today - start_date).days + 1 # +1 means if start_date is today, we still need to collect
+            print("WARNING end_day is later than today")
+            print("collect_times has been corrected")
+        # for web app, one more day will be collected as dummy data to use date and daytime easily
+        if isWeb:
+            collect_times += 1
+        # collect new weather data and add it into historical_data
+        historical_data = historical_data.append(collect_weather_data(BASE_URL, start_date, collect_times), ignore_index=True)
+    
+    data_length = len(historical_data)
+    print(f'{data_length} historical data have been collected')
+    
+    # with: no need to close
+    # dump to pkl file
+    with open(file_output, 'wb') as f1:
+        pickle.dump(historical_data, f1)
+    # write a txt file
+    txt_output = file_output.replace("pkl", "") + "txt"
+    with open(txt_output, 'w') as f1_txt:
+        f1_txt.write(historical_data.to_string())
+
+def load_and_process_data_func(file_input, file_output):
+    """load weather data from pkl and process the data for NN trainning
+    
+    Args:
+        file_input: '*data/historical_data.pkl'
+        file_output: '*data/processed_data.pkl'
+    """
+    # load pickle file of weather data
+    with open(file_input, 'rb') as pickle_f_in:
+        historical_data = pickle.load(pickle_f_in)
+    
+    # transfer to DataFrame
+    df = pd.DataFrame(historical_data, columns=FEATURES)
+    
+    # change date to days and years(year is extra column added) 
+    process_date(df)
+    # add new columns - prior data
+    
+    # for each feature, shift the column of a feature by n rows and add this new column to df
+    for each_feature in FEATURES:
+        if each_feature != 'date' and each_feature != 'visibility':
+            for n in range(1, MAX_N + 1):
+                add_prior_nth_day_feature(df, n, each_feature)
+    
+    add_4_to_7_avg_temp(df)
+    
+    # remove first MAX_N rows
+    df = df.iloc[MAX_N:]
+    df.info()
+    
+    # check if output exists
+    # if yes, change file name
+    if os.path.exists(file_output):
+        now = datetime.now()
+        today_str = str(now.year) + "_" + str(now.month) + "_" + str(now.day) + "_" + str(now.time())
+        os.system(f'mv {file_output} {file_output}_{today_str}')
+    
+    # print whole dataframe
+    # print(df.to_string())
+    
+    # dump to a pkl file
+    with open(file_output, 'wb') as pickle_f_out:
+        pickle.dump(df, pickle_f_out)
+    # # write a txt file
+    txt_output = file_output.replace("pkl", "") + "txt"
+    with open(txt_output, 'w') as f1_txt:
+        f1_txt.write(df.to_string())
 
 def get_daily_and_ten_data(response, last_daily_data, last_ten_pm_data, date_format, city):
     """get daily weather data and 10pm weather data from web response"""
@@ -112,7 +173,19 @@ def get_daily_and_ten_data(response, last_daily_data, last_ten_pm_data, date_for
     # correct icon
     if "icon" not in daily_data:
         print(f'### ERROR: icon is missing on {city} {date_format}')
-        daily_data["icon"] = response.json()["hourly"]["icon"]
+        try:
+            daily_data["icon"] = response.json()["hourly"]["icon"]
+        except:
+            print(f'### BIG ERROR: icon is missing on {city} {date_format}')
+            daily_data["icon"] = last_daily_data["icon"]
+    if "icon" not in ten_pm_data:
+        print(f'### ERROR: icon is missing at ten on {city} {date_format}')
+        nine_pm_data = response.json()["hourly"]["data"][-3]
+        if "icon" not in nine_pm_data:
+            ten_pm_data["icon"] = last_ten_pm_data["icon"]
+        else:
+            ten_pm_data["icon"] = nine_pm_data["icon"]
+   
     # windBearing could be missing if windSpeed is 0
     if "windBearing" not in daily_data:
         daily_data["windBearing"] = 0
@@ -144,11 +217,11 @@ def collect_weather_data(url, target_date, days):
         date_format = target_date.strftime('%Y-%m-%d')
         print(f'{date_format}')
 
-        request_Austin = BASE_URL.format(API_KEY_Austin, LOCATION_Austin, date_format)
-        request_Llano = BASE_URL.format(API_KEY_Llano, LOCATION_Llano, date_format)
-        request_SanAntonio= BASE_URL.format(API_KEY_SanAntonio, LOCATION_SanAntonio, date_format)
-        request_Brenham = BASE_URL.format(API_KEY_Brenham, LOCATION_Brenham, date_format)
-        request_Temple = BASE_URL.format(API_KEY_Temple, LOCATION_Temple, date_format)
+        request_Austin = BASE_URL.format(API_KEY_AUSTN, LOCATION_AUSTN, date_format)
+        request_Llano = BASE_URL.format(API_KEY_LLANO, LOCATION_LLANO, date_format)
+        request_SanAntonio= BASE_URL.format(API_KEY_SAN_ANTONIO, LOCATION_SAN_ANTONIO, date_format)
+        request_Brenham = BASE_URL.format(API_KEY_BRENHAM, LOCATION_BRENHAM, date_format)
+        request_Temple = BASE_URL.format(API_KEY_TEMPLE, LOCATION_TEMPLE, date_format)
 
         response_A = requests.get(request_Austin)
         response_L = requests.get(request_Llano)
@@ -158,6 +231,7 @@ def collect_weather_data(url, target_date, days):
 
         if response_A.status_code == 200 and response_L.status_code == 200 and response_S.status_code == 200 and response_B.status_code == 200 and response_T.status_code == 200:
             # last_daily_data and last_ten_pm_data is from last loop (last day)
+            
             daily_data_A, ten_pm_data_A, last_daily_data_A, last_ten_pm_data_A = get_daily_and_ten_data(response_A, last_daily_data_A, last_ten_pm_data_A, date_format, "A")
             daily_data_L, ten_pm_data_L, last_daily_data_L, last_ten_pm_data_L = get_daily_and_ten_data(response_L, last_daily_data_L, last_ten_pm_data_L, date_format, "L")
             daily_data_S, ten_pm_data_S, last_daily_data_S, last_ten_pm_data_S = get_daily_and_ten_data(response_S, last_daily_data_S, last_ten_pm_data_S, date_format, "S")
@@ -168,7 +242,14 @@ def collect_weather_data(url, target_date, days):
                 date = date_format,
                 daytime = round((daily_data_A['sunsetTime'] - daily_data_A['sunriseTime']) / 3600, 2),
 
-                icon_A = icons[daily_data_A['icon']],
+                icon0_A = ICONS[daily_data_A['icon']][0],
+                icon1_A = ICONS[daily_data_A['icon']][1],
+                icon2_A = ICONS[daily_data_A['icon']][2],
+                icon3_A = ICONS[daily_data_A['icon']][3],
+                icon4_A = ICONS[daily_data_A['icon']][4],
+                icon5_A = ICONS[daily_data_A['icon']][5],
+                icon6_A = ICONS[daily_data_A['icon']][6],
+                icon7_A = ICONS[daily_data_A['icon']][7],
                 precipProbability_A = daily_data_A['precipProbability'],
                 precipIntensity_A = daily_data_A['precipIntensity'],
                 humidity_A = daily_data_A['humidity'],
@@ -180,7 +261,14 @@ def collect_weather_data(url, target_date, days):
                 windBearing_A = daily_data_A['windBearing'],
                 pressure_A = daily_data_A['pressure'],
                 dewPoint_A = daily_data_A['dewPoint'],
-                n_icon_A = icons[ten_pm_data_A['icon']],
+                n_icon0_A = ICONS[ten_pm_data_A['icon']][0],
+                n_icon1_A = ICONS[ten_pm_data_A['icon']][1],
+                n_icon2_A = ICONS[ten_pm_data_A['icon']][2],
+                n_icon3_A = ICONS[ten_pm_data_A['icon']][3],
+                n_icon4_A = ICONS[ten_pm_data_A['icon']][4],
+                n_icon5_A = ICONS[ten_pm_data_A['icon']][5],
+                n_icon6_A = ICONS[ten_pm_data_A['icon']][6],
+                n_icon7_A = ICONS[ten_pm_data_A['icon']][7],
                 n_precipProbability_A = ten_pm_data_A['precipProbability'],
                 n_precipIntensity_A = ten_pm_data_A['precipIntensity'],
                 n_humidity_A = ten_pm_data_A['humidity'],
@@ -192,7 +280,14 @@ def collect_weather_data(url, target_date, days):
                 n_pressure_A = ten_pm_data_A['pressure'],
                 n_dewPoint_A = ten_pm_data_A['dewPoint'],
 
-                icon_L = icons[daily_data_L['icon']],
+                icon0_L = ICONS[daily_data_L['icon']][0],
+                icon1_L = ICONS[daily_data_L['icon']][1],
+                icon2_L = ICONS[daily_data_L['icon']][2],
+                icon3_L = ICONS[daily_data_L['icon']][3],
+                icon4_L = ICONS[daily_data_L['icon']][4],
+                icon5_L = ICONS[daily_data_L['icon']][5],
+                icon6_L = ICONS[daily_data_L['icon']][6],
+                icon7_L = ICONS[daily_data_L['icon']][7],
                 precipProbability_L = daily_data_L['precipProbability'],
                 precipIntensity_L = daily_data_L['precipIntensity'],
                 humidity_L = daily_data_L['humidity'],
@@ -204,7 +299,14 @@ def collect_weather_data(url, target_date, days):
                 windBearing_L = daily_data_L['windBearing'],
                 pressure_L = daily_data_L['pressure'],
                 dewPoint_L = daily_data_L['dewPoint'],
-                n_icon_L = icons[ten_pm_data_L['icon']],
+                n_icon0_L = ICONS[ten_pm_data_L['icon']][0],
+                n_icon1_L = ICONS[ten_pm_data_L['icon']][1],
+                n_icon2_L = ICONS[ten_pm_data_L['icon']][2],
+                n_icon3_L = ICONS[ten_pm_data_L['icon']][3],
+                n_icon4_L = ICONS[ten_pm_data_L['icon']][4],
+                n_icon5_L = ICONS[ten_pm_data_L['icon']][5],
+                n_icon6_L = ICONS[ten_pm_data_L['icon']][6],
+                n_icon7_L = ICONS[ten_pm_data_L['icon']][7],
                 n_precipProbability_L = ten_pm_data_L['precipProbability'],
                 n_precipIntensity_L = ten_pm_data_L['precipIntensity'],
                 n_humidity_L = ten_pm_data_L['humidity'],
@@ -216,8 +318,14 @@ def collect_weather_data(url, target_date, days):
                 n_pressure_L = ten_pm_data_L['pressure'],
                 n_dewPoint_L = ten_pm_data_L['dewPoint'],
 
-
-                icon_S = icons[daily_data_S['icon']],
+                icon0_S = ICONS[daily_data_S['icon']][0],
+                icon1_S = ICONS[daily_data_S['icon']][1],
+                icon2_S = ICONS[daily_data_S['icon']][2],
+                icon3_S = ICONS[daily_data_S['icon']][3],
+                icon4_S = ICONS[daily_data_S['icon']][4],
+                icon5_S = ICONS[daily_data_S['icon']][5],
+                icon6_S = ICONS[daily_data_S['icon']][6],
+                icon7_S = ICONS[daily_data_S['icon']][7],
                 precipProbability_S = daily_data_S['precipProbability'],
                 precipIntensity_S = daily_data_S['precipIntensity'],
                 humidity_S = daily_data_S['humidity'],
@@ -229,7 +337,14 @@ def collect_weather_data(url, target_date, days):
                 windBearing_S = daily_data_S['windBearing'],
                 pressure_S = daily_data_S['pressure'],
                 dewPoint_S = daily_data_S['dewPoint'],
-                n_icon_S = icons[ten_pm_data_S['icon']],
+                n_icon0_S = ICONS[ten_pm_data_S['icon']][0],
+                n_icon1_S = ICONS[ten_pm_data_S['icon']][1],
+                n_icon2_S = ICONS[ten_pm_data_S['icon']][2],
+                n_icon3_S = ICONS[ten_pm_data_S['icon']][3],
+                n_icon4_S = ICONS[ten_pm_data_S['icon']][4],
+                n_icon5_S = ICONS[ten_pm_data_S['icon']][5],
+                n_icon6_S = ICONS[ten_pm_data_S['icon']][6],
+                n_icon7_S = ICONS[ten_pm_data_S['icon']][7],
                 n_precipProbability_S = ten_pm_data_S['precipProbability'],
                 n_precipIntensity_S = ten_pm_data_S['precipIntensity'],
                 n_humidity_S = ten_pm_data_S['humidity'],
@@ -241,8 +356,14 @@ def collect_weather_data(url, target_date, days):
                 n_pressure_S = ten_pm_data_S['pressure'],
                 n_dewPoint_S = ten_pm_data_S['dewPoint'],
                 
-
-                icon_B = icons[daily_data_B['icon']],
+                icon0_B = ICONS[daily_data_B['icon']][0],
+                icon1_B = ICONS[daily_data_B['icon']][1],
+                icon2_B = ICONS[daily_data_B['icon']][2],
+                icon3_B = ICONS[daily_data_B['icon']][3],
+                icon4_B = ICONS[daily_data_B['icon']][4],
+                icon5_B = ICONS[daily_data_B['icon']][5],
+                icon6_B = ICONS[daily_data_B['icon']][6],
+                icon7_B = ICONS[daily_data_B['icon']][7],
                 precipProbability_B = daily_data_B['precipProbability'],
                 precipIntensity_B = daily_data_B['precipIntensity'],
                 humidity_B = daily_data_B['humidity'],
@@ -254,7 +375,14 @@ def collect_weather_data(url, target_date, days):
                 windBearing_B = daily_data_B['windBearing'],
                 pressure_B = daily_data_B['pressure'],
                 dewPoint_B = daily_data_B['dewPoint'],
-                n_icon_B = icons[ten_pm_data_B['icon']],
+                n_icon0_B = ICONS[ten_pm_data_B['icon']][0],
+                n_icon1_B = ICONS[ten_pm_data_B['icon']][1],
+                n_icon2_B = ICONS[ten_pm_data_B['icon']][2],
+                n_icon3_B = ICONS[ten_pm_data_B['icon']][3],
+                n_icon4_B = ICONS[ten_pm_data_B['icon']][4],
+                n_icon5_B = ICONS[ten_pm_data_B['icon']][5],
+                n_icon6_B = ICONS[ten_pm_data_B['icon']][6],
+                n_icon7_B = ICONS[ten_pm_data_B['icon']][7],
                 n_precipProbability_B = ten_pm_data_B['precipProbability'],
                 n_precipIntensity_B = ten_pm_data_B['precipIntensity'],
                 n_humidity_B = ten_pm_data_B['humidity'],
@@ -267,7 +395,14 @@ def collect_weather_data(url, target_date, days):
                 n_dewPoint_B = ten_pm_data_B['dewPoint'],
 
 
-                icon_T = icons[daily_data_T['icon']],
+                icon0_T = ICONS[daily_data_T['icon']][0],
+                icon1_T = ICONS[daily_data_T['icon']][1],
+                icon2_T = ICONS[daily_data_T['icon']][2],
+                icon3_T = ICONS[daily_data_T['icon']][3],
+                icon4_T = ICONS[daily_data_T['icon']][4],
+                icon5_T = ICONS[daily_data_T['icon']][5],
+                icon6_T = ICONS[daily_data_T['icon']][6],
+                icon7_T = ICONS[daily_data_T['icon']][7],
                 precipProbability_T = daily_data_T['precipProbability'],
                 precipIntensity_T = daily_data_T['precipIntensity'],
                 humidity_T = daily_data_T['humidity'],
@@ -279,7 +414,14 @@ def collect_weather_data(url, target_date, days):
                 windBearing_T = daily_data_T['windBearing'],
                 pressure_T = daily_data_T['pressure'],
                 dewPoint_T = daily_data_T['dewPoint'],
-                n_icon_T = icons[ten_pm_data_T['icon']],
+                n_icon0_T = ICONS[ten_pm_data_T['icon']][0],
+                n_icon1_T = ICONS[ten_pm_data_T['icon']][1],
+                n_icon2_T = ICONS[ten_pm_data_T['icon']][2],
+                n_icon3_T = ICONS[ten_pm_data_T['icon']][3],
+                n_icon4_T = ICONS[ten_pm_data_T['icon']][4],
+                n_icon5_T = ICONS[ten_pm_data_T['icon']][5],
+                n_icon6_T = ICONS[ten_pm_data_T['icon']][6],
+                n_icon7_T = ICONS[ten_pm_data_T['icon']][7],
                 n_precipProbability_T = ten_pm_data_T['precipProbability'],
                 n_precipIntensity_T = ten_pm_data_T['precipIntensity'],
                 n_humidity_T = ten_pm_data_T['humidity'],
@@ -290,7 +432,6 @@ def collect_weather_data(url, target_date, days):
                 n_windBearing_T = ten_pm_data_T['windBearing'],
                 n_pressure_T = ten_pm_data_T['pressure'],
                 n_dewPoint_T = ten_pm_data_T['dewPoint']
-
             ))
             failed_times = 0
             target_date += timedelta(days=1)
@@ -309,7 +450,6 @@ def collect_weather_data(url, target_date, days):
 
         # convert list of namedtuple to DataFrame
         historical_data_df = pd.DataFrame(historical_data)
-
     return historical_data_df
 
 def add_prior_nth_day_feature(df, n, feature):
@@ -328,42 +468,12 @@ def add_prior_nth_day_feature(df, n, feature):
     new_feature = f'{feature}_{n}'
     df[new_feature] = prior_nth_day_feature_col
 
-def get_days_a_year(year):
-    """return days of year: 365 or 366"""
-    if year % his_years == 2:
-        return days_a_year + 1
-    else:
-        return days_a_year
-
 def avg_temp(temp_col, day):
     """get average temperature of 20 days near 'day' """
     temp_sum = 0
     for i in range(day - half_his_days, day + half_his_days):
         temp_sum += temp_col[i]
     return temp_sum / (2 * half_his_days)
-
-def get_his_avg_temp(temp_col, day):
-    """get average temperature of 20 days near 'day' in past his_years"""
-    avg_temp_sum = 0
-    day = day - get_days_a_year(years) # 3 years (his_years), 365, 365(730), 366(1096) (365.25, 730.5, 1095.75)
-    while years < his_years:
-        avg_temp_sum += avg_temp(temp_col, day)
-        years += 1
-        day = day - get_days_a_year(years)
-    return avg_temp_sum / his_years
-
-def add_his_avg_temp(df):
-    """add columns of average temperature of 20 days of last his_years(three years)"""
-    days_num = df.shape[0]
-    temp_min_col = df["temperatureMin_A"].copy() # deep copy
-    temp_max_col = df["temperatureMax_A"].copy() # deep copy
-
-    for i in range(start_train_day, days_num): # if days_num is less than start_train_day, no for-loop
-        temp_min_col[i] = get_his_avg_temp(temp_min_col, i)
-        temp_max_col[i] = get_his_avg_temp(temp_max_col, i)
-
-    df["history_avg_min"] = temp_min_col
-    df["history_avg_max"] = temp_max_col
 
 def get_4_to_7_avg_min_max_temp(temp_col, day):
     """get average/min/max temperature of last 4 to 7 days"""
@@ -405,38 +515,22 @@ def add_4_to_7_avg_temp(df):
     df["past_4_to_7_max_max"] = temp_max_col_max
 
 
-def process_date(df, max_N):
-    """change date format to day number + years
-       2009/1/1 is start date
-       2009/1/30 is 29 days + 0 years
+def process_date(df):
+    """change date format to day number
+       2009/1/1 is 1
+       2009/2/28 is 59
     """
     rowNum = df.shape[0]
-    first_day = df['date'][0]
-    first_day = datetime.strptime(first_day, '%Y-%m-%d')
-    first_day = first_day + timedelta(days=max_N)
     
-    four_year_days = days_a_year * 4 + 1
-    four_year_count = -1 # because day_diff % four_year_days = 0 at 0
     days_li = []
-    years_li = []
-    for i in range(max_N):
-        days_li.append(0)
-        years_li.append(0)
-
-    for i in range(max_N, rowNum):
-        current_day = df['date'][i]
-        current_day = datetime.strptime(current_day, '%Y-%m-%d')
-        day_diff = abs((current_day - first_day).days)
-        if day_diff % four_year_days == 0:
-            four_year_count += 1
-        day_diff -= four_year_count
-        years = int(day_diff / days_a_year)
-        days = day_diff - (days_a_year * years)
-        years_li.append(years)
-        days_li.append(days)
+    for i in range(rowNum):
+        current_day = df['date'][i] # 2020-10-20 / 2020-10-03??
+        date_arr = current_day.split("-")
+        month = int(date_arr[1])
+        day = int(date_arr[2])
+        days_li.append(MONTH_DAYS[month - 1] + day)
 
     df['days'] = days_li
-    df['years'] = years_li
 
 def get_start_day_first_day_last_day(df, origin_first_day):
     """get start day to collect historical weather data
@@ -456,4 +550,3 @@ def get_start_day_first_day_last_day(df, origin_first_day):
 
     # str[:10] is first 10 letter, it is just for renaming historical_data.pkl
     return start_date, first_day_str[:10], last_day_str[:10], clean_df 
-    
