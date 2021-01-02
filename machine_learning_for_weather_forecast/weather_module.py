@@ -91,6 +91,9 @@ def collect_data_func(collect_times, year, month, day, file_output, force_restar
         historical_data = historical_data.append(collect_weather_data(BASE_URL, start_date, collect_times), ignore_index=True)
     
     data_length = len(historical_data)
+    if data_length >= 2:
+        print("### last two days:")
+        print((historical_data[-2:][["date", "temperatureMin_A", "temperatureMax_A", "icon4_A", "icon5_A", "icon6_A", "icon7_A"]]).to_string())
     print(f'{data_length} historical data have been collected')
     
     # with: no need to close
@@ -134,13 +137,10 @@ def load_and_process_data_func(file_input, file_output):
     
     # check if output exists
     # if yes, change file name
-    if os.path.exists(file_output):
-        now = datetime.now()
-        today_str = str(now.year) + "_" + str(now.month) + "_" + str(now.day) + "_" + str(now.time())
-        os.system(f'mv {file_output} {file_output}_{today_str}')
-    
-    # print whole dataframe
-    # print(df.to_string())
+    # if os.path.exists(file_output):
+    #    now = datetime.now()
+    #    today_str = str(now.year) + "_" + str(now.month) + "_" + str(now.day) + "_" + str(now.time())
+    #    os.system(f'mv {file_output} {file_output}_{today_str}')
     
     # dump to a pkl file
     with open(file_output, 'wb') as pickle_f_out:
