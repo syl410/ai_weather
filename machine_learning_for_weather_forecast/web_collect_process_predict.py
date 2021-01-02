@@ -3,7 +3,6 @@
 """request weather data from 'darksky' website , 
    collect useful feature data and load them in pkl file
 """
-print("start running web_collect_process.py")
 import pandas as pd
 import numpy as np
 import pickle
@@ -17,13 +16,13 @@ from neural_network_model import *
 from weather_module import *
 from constant import *
 
-print("start running web_collect_process.py")
+print("start running web_collect_process_predict.py")
 """collect data"""
 collect_times = 2
 year = 2020
 month = 12
 day = 10
-history_data_file = 'prediction_data/historical_data.pkl'
+history_data_file = './prediction_data/historical_data.pkl'
 # it will force to collect data from start_date each time. Check carefully each time!
 force_restart = False 
 
