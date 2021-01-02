@@ -71,10 +71,10 @@ async function wait() {
 		var HH_MM = time_now.substr(11, 5); // 00:17 (hours:minutes)
 		await sleep(10000); // 1 is 1ms, 1000 is 1s
 		console.log(HH_MM);
-		if (HH_MM == "23:35") {
+		if (HH_MM == "23:40") {
 		// if (false) {
 			if (!hasRunPyToday) {
-				console.log("Start running python " + hasRunPyToday);
+				console.log("Start running python");
 
 				// e.g.: var process = spawn('python',["./hello.py", req.query.firstname, req.query.lastname]);
 				const pyProcess = spawn('python', ['./machine_learning_for_weather_forecast/web_collect_process_predict.py.py']);
