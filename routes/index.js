@@ -26,7 +26,6 @@ router.get("/", function(req, res){
 			return
 		}
 		var weather_info = JSON.parse(data);
-		console.log(weather_info);
 		res.render("index", {weather_info : weather_info}); 
 	});
 });

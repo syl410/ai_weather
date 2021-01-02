@@ -69,8 +69,8 @@ async function wait() {
 	while(true) {
 		var time_now = moment().tz("America/Chicago").format(); // 2020-03-28T00:17:38-05:00
 		var HH_MM = time_now.substr(11, 5); // 00:17 (hours:minutes)
-		await sleep(5000); // 1 is 1ms, 1000 is 1s
-		console.log(HH_MM);
+		await sleep(20000); // 1 is 1ms, 1000 is 1s
+		// console.log(HH_MM);
 		if (HH_MM == "02:30") {
 		// if (false) {
 			if (!hasRunPyToday) {
