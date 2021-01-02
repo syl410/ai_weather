@@ -96,11 +96,9 @@ async function wait() {
 // port of cloud9 environment: process.env.PORT
 // local is http://localhost:8080/
 var port = isLocal ? 8080 : process.env.PORT; 
-app.listen(8080, process.env.IP, function(){
+app.listen(port, process.env.IP, function(){
    console.log("AI weather Server Has Started!");
-
    wait();
-   
 });
 
 
