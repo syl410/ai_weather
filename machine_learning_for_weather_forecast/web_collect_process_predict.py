@@ -25,7 +25,7 @@ collect_times = 2
 year = 2020
 month = 12
 day = 10
-history_data_file = os.path.join(cur_path, '/prediction_data/historical_data.pkl')
+history_data_file = os.path.join(cur_path, 'prediction_data/historical_data.pkl')
 print(history_data_file)
 # it will force to collect data from start_date each time. Check carefully each time!
 force_restart = False 
