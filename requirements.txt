@@ -56,8 +56,6 @@ pylint-flask==0.5
 pylint-plugin-utils==0.6
 pyOpenSSL==17.5.0
 pyparsing==2.2.0
-pyserial==3.4
-python-apt==1.6.5+ubuntu0.2
 python-dateutil==2.8.1
 python-debian==0.1.32
 pytz==2019.3
