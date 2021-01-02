@@ -1,4 +1,6 @@
 <% include ./partials/header %>
+
+<div>
     <div>
         <p style="font-size: 300%; color: grey">Austin, TX</p>
         <p style="font-size: 200%; color: grey"><%=weather_info.what_day%> <%=weather_info.forecast_date%>, <%=weather_info.weather%></p>
@@ -12,7 +14,9 @@
         <span style="font-size: 105%;"><sup>°F</sup></span>
     </p>
     <p style="font-size: 80%; color: grey"> - Updated on 22:30 <%=weather_info.updated_date%></p>
-    
+    <p>
+        <img class="img-responsive thumbnail" width="800" src="/picture/fiveCity.png" alt="five cities">
+    </p>
     <p style="margin-left: -0.3em">
         <img src="/picture/clear-night.png" alt="clear!">
     </p>
@@ -37,4 +41,5 @@
     <p style="margin-left: -0.3em">
         <img src="/picture/snow.png" alt="clear!">
     </p>
+</div>
 <% include ./partials/footer %>
