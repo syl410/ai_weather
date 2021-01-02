@@ -71,21 +71,21 @@ async function wait() {
 		var HH_MM = time_now.substr(11, 5); // 00:17 (hours:minutes)
 		await sleep(5000); // 1 is 1ms, 1000 is 1s
 		console.log(HH_MM);
-		if (HH_MM == "01:14") {
+		if (HH_MM == "01:21") {
 		// if (false) {
 			if (!hasRunPyToday) {
 				console.log("Start running python");
 
 				// e.g.: var process = spawn('python',["./hello.py", req.query.firstname, req.query.lastname]);
-				// const pyProcess = spawn('python', ['./machine_learning_for_weather_forecast/web_collect_process_predict.py']);
-				const pyProcess = spawn('python', ['./machine_learning_for_weather_forecast/hi.py']);
+				const pyProcess = spawn('python', ['./machine_learning_for_weather_forecast/web_collect_process_predict.py']);
+				// const pyProcess = spawn('python', ['./machine_learning_for_weather_forecast/hi.py']);
 				// Takes stdout data from script which executed 
 				// with arguments
 				pyProcess.stdout.on('data', function(output) { 
 				    console.log(output.toString()); // buffer to string
 				});
-				pyProcess.stderr.on('data', (data) => {
-    				console.error(data.toString())
+				pyProcess.stderr.on('data', function(output) {
+    				console.error(output.toString());
 				});
 
 				hasRunPyToday = true;
