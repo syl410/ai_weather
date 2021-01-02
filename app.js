@@ -71,7 +71,7 @@ async function wait() {
 		var HH_MM = time_now.substr(11, 5); // 00:17 (hours:minutes)
 		await sleep(5000); // 1 is 1ms, 1000 is 1s
 		console.log(HH_MM);
-		if (HH_MM == "00:48") {
+		if (HH_MM == "00:53") {
 		// if (false) {
 			if (!hasRunPyToday) {
 				console.log("Start running python");
