@@ -10,7 +10,6 @@ from collections import namedtuple
 from constant import *
 import pandas as pd
 import requests
-import matplotlib.pyplot as plt
 import pickle
 import os
 import os.path
