@@ -21,10 +21,10 @@ print("start running web_collect_process_predict.py")
 collect_times = 2
 year = 2020
 month = 12
-day = 10
+day = 18
 history_data_file = 'machine_learning_for_weather_forecast/prediction_data/historical_data.pkl'
 # it will force to collect data from start_date each time. Check carefully each time!
-force_restart = False 
+force_restart = False
 
 # collect_data_func(collect_times, year, month, day)
 collect_data_func(collect_times, year, month, day, history_data_file, force_restart, True)
