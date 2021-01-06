@@ -11,6 +11,7 @@ import random
 import os.path
 import time
 from datetime import datetime, timedelta
+import pytz
 
 from neural_network_model import *
 from weather_module import *
@@ -116,7 +117,8 @@ tempMin = round(float(Y_tempMin_predict[0]))
 
 
 # print date
-today = datetime.today()
+now = datetime.now(pytz.timezone('America/Chicago'))
+today = datetime(now.year, now.month, now.day)
 tomorrow = today + timedelta(days=1)
 weekday = tomorrow.strftime('%A')
 
