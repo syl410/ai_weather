@@ -17,19 +17,18 @@ from weather_module import *
 from constant import *
 
 # select weather/max temperature/min temperature to train
-icon_loop_run = True
+icon_loop_run = False
 temp_max_loop_run = False
-temp_min_loop_run = False
+temp_min_loop_run = True
 # if it is final test, test dataset will be used for evaluating prediction results
-final_test = False
+final_test = True
+# if true, dump theta and bias for every day prediction
+save_weight = True
 
 # load pickle file of processed weather data
 file_input = 'data/processed_data.pkl'
 with open(file_input, 'rb') as pickle_f_in:
     df = pickle.load(pickle_f_in)
-
-# if true, dump theta and bias for every day prediction
-save_weight = True
 
 # X_ICON_FEATURES: icon feature
 # Y_ICON_FEATURE: output feature for icon/weather prediction
@@ -187,47 +186,36 @@ def train_evaluate_predict_func(X, hidden_units, output_num, learning_rate, lamd
     """
 
 ########### adjustable number ############
-icon_hidden_units_li = [[20, 20], [30, 30]] # FINAL 20 20?
-icon_learning_rate_li = [0.04, 0.07, 0.1] # FINAL 0.07?
-icon_lamda_li = [0.05, 0.1, 0.2] # FINAL [0.1] ?
-icon_scaling_factor_li = [1] # FINAL 1?
-icon_iteration_li = [100, 150, 200] # FINAL 150 ?
-icon_steps_li = [200] # FINAL
-icon_batch_num_li = [3, 5, 10] # FINAL 5 ?
+icon_hidden_units_li = [[30, 30]]
+icon_learning_rate_li = [0.2]
+icon_lamda_li = [0.3]
+icon_scaling_factor_li = [1]
+icon_iteration_li = [200]
+
+icon_steps_li = [200]
+icon_batch_num_li = [5]
 icon_shuffle = True
 icon_regression_or_classification = "classification"
 icon_print_loss = False
 
-temp_hidden_units_li = [[30, 30], [40, 40]]
+temp_hidden_units_li = [[30, 30]] 
 
-tempMax_learning_rate_li = [0.01] # FINAL MAX TMEP
-tempMin_learning_rate_li = [0.006] # FINAL MIN TMEP
-tempMax_learning_rate_li = [0.002, 0.004, 0.006, 0.008, 0.01]
-tempMin_learning_rate_li = [0.004, 0.006, 0.008, 0.012]
+tempMax_learning_rate_li = [0.005]
+tempMin_learning_rate_li = [0.001]
 
-tempMax_lamda_li = [22] # FINAL MAX TMEP 
-tempMin_lamda_li = [15] # FINAL MIN TMEP
-tempMax_lamda_li = [10, 15, 20, 24, 28, 32]
-tempMin_lamda_li = [13, 15, 17] 
+tempMax_lamda_li = [28]
+tempMin_lamda_li = [12]
 
 temp_scaling_factor_li = [1]
 
-tempMax_iteration_li = [125] # FINAL MAX TMEP
-tempMin_iteration_li = [75] # FINAL MIN TMEP
-tempMax_iteration_li = [20, 50, 100, 200, 300]
-tempMax_iteration_li = [170, 200, 230, 260, 300] # TEST2
-tempMax_iteration_li = [20, 50, 80, 110, 140] # TEST1
-tempMin_iteration_li = [50, 75, 100]
+tempMax_iteration_li = [80]
+tempMin_iteration_li = [100]
 
-
-tempMax_steps_li = [250] # FINAL MAX TMEP
-tempMin_steps_li = [200] # FINAL MIN TMEP
 tempMax_steps_li = [200]
-tempMin_steps_li = [100, 200, 225]
+tempMin_steps_li = [250]
 
-tempMax_batch_num_li = [30] # FINAL MAX TMEP
-tempMin_batch_num_li = [30] # FINAL MIN TMEP
-temp_batch_num_li = [20, 50, 70, 90, 110, 130]
+tempMax_batch_num_li = [100]
+tempMin_batch_num_li = [70]
 
 temp_shuffle = True
 temp_regression_or_classification = "regression"
@@ -314,7 +302,7 @@ if temp_max_loop_run == True:
                 temp_scaling_factor_li, 
                 tempMax_iteration_li,
                 tempMax_steps_li,
-                temp_batch_num_li,
+                tempMax_batch_num_li,
                 X = X_tempMax,
                 output_num = Y_tempMaxMin_num,
                 X_train = X_tempMax_train,
@@ -336,7 +324,7 @@ if temp_min_loop_run == True:
                 temp_scaling_factor_li, 
                 tempMin_iteration_li,
                 tempMin_steps_li,
-                temp_batch_num_li,
+                tempMin_batch_num_li,
                 X = X_tempMin,
                 output_num = Y_tempMaxMin_num,
                 X_train = X_tempMin_train,
