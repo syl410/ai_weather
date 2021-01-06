@@ -21,9 +21,9 @@ icon_loop_run = False
 temp_max_loop_run = False
 temp_min_loop_run = True
 # if it is final test, test dataset will be used for evaluating prediction results
-final_test = True
+final_test = False
 # if true, dump theta and bias for every day prediction
-save_weight = True
+save_weight = False
 
 # load pickle file of processed weather data
 file_input = 'data/processed_data.pkl'
