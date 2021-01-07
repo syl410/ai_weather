@@ -1,9 +1,9 @@
 {
-	"what_day" : "Wednesday",
-	"forecast_date" : "1/6",
-	"updated_date" : "1/5",
-	"weather" : "rain",
-	"weather_icon" : "rain",
-	"max_temperature" : "69",
-	"min_temperature" : "53"
+	"what_day" : "Thursday",
+	"forecast_date" : "1/7",
+	"updated_date" : "1/6",
+	"weather" : "clear day",
+	"weather_icon" : "clear-day",
+	"max_temperature" : "57",
+	"min_temperature" : "40"
 }
