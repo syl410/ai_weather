@@ -13,8 +13,10 @@
         <span style="font-size: 150%;">/ <%=weather_info.min_temperature%></span>
         <span style="font-size: 105%;"><sup>°F</sup></span>
     </p>
-    <p style="font-size: 80%; color: grey"> - Updated on 23:01 <%=weather_info.updated_date%></p>
+    <p style="font-size: 80%; color: grey"> - Predicted at 23:01 <%=weather_info.updated_date%></p>
 
+    <p >Actual weather for comparison: <a href="https://darksky.net/forecast/30.2711,-97.7437/us12/en">Dark Sky</a></p>
+    <br>
     <br>
     <p style="font-size: 100%">History data from Austin and its surrouding cities have been used for training and prediction</p>
     <p>
@@ -28,6 +30,13 @@
 		<li >Mean of difference between prediction max temperature and actual max temperature is 2.9°F (1.6°C)</li>
 		<li >Weather (clear, cloud, rain, etc.) prediction accuracy is 65%</li>
 	</ul>
+	
+	<br>
+	<p style="font-size: 130%"><b>Compared with other professional weather webs</b></p>
+	<p>These are quoted from a <a href="https://theoutline.com/post/3826/crap-weather-apps-meteorolgists?zd=1&zi=3pfkmqes">post</a></p>
+	<p>"...for one to three day forecasts...The Weather Channel, and Accuweather, which are accurate about 75 percent of the time..."</p>
+	<p>"...Dark Sky and World Weather Online are accurate 64 to 67 percent of the time..."</p>
+	
     <p>
         <img class="img-responsive thumbnail" width="800" src="/picture/performance.png" alt="performance">
     </p>
