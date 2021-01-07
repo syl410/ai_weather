@@ -16,6 +16,7 @@ import os.path
 import json
 import sys
 import random
+import pytz
 
 start_train_day = 1 + MAX_N
 
@@ -48,7 +49,7 @@ def collect_data_func(collect_times, year, month, day, file_output, force_restar
     start_date = datetime(year, month, day)
     start_date_bk = start_date
     
-    now = datetime.now()
+    now = datetime.now(pytz.timezone('America/Chicago'))
     
     # historical weather data
     historical_data = pd.DataFrame()
