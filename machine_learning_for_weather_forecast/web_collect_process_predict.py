@@ -12,23 +12,37 @@ import os.path
 import time
 from datetime import datetime, timedelta
 import pytz
+import sys
 
 from neural_network_model import *
 from weather_module import *
 from constant import *
 
+# isReboot == True if this is called first time the app is deployed
+isReboot = True if sys.argv[1] == "True" else False
+
 print("start running web_collect_process_predict.py")
 """collect data"""
-collect_times = 2
-year = 2020
-month = 12
-day = 18
+now = datetime.now(pytz.timezone('America/Chicago'))
+today = datetime(now.year, now.month, now.day)
+# if isReboot, predict today instead of tomorrow
+if isReboot:
+    today = today - timedelta(days=1)
+tomorrow = today + timedelta(days=1)
+weekday = tomorrow.strftime('%A')
+
+# calculate around half month date to start collecting data
+half_month_ago = today - timedelta(days=17)
+collect_times = 20
+year = half_month_ago.year
+month = half_month_ago.month
+day = half_month_ago.day
 history_data_file = 'machine_learning_for_weather_forecast/prediction_data/historical_data.pkl'
 # it will force to collect data from start_date each time. Check carefully each time!
 force_restart = False
 
 # collect_data_func(collect_times, year, month, day)
-collect_data_func(collect_times, year, month, day, history_data_file, force_restart, True)
+collect_data_func(collect_times, year, month, day, history_data_file, force_restart, True, isReboot)
 
 """load and process"""
 process_data_output = 'machine_learning_for_weather_forecast/prediction_data/processed_data.pkl'
@@ -117,10 +131,7 @@ tempMin = round(float(Y_tempMin_predict[0]))
 
 
 # print date
-now = datetime.now(pytz.timezone('America/Chicago'))
-today = datetime(now.year, now.month, now.day)
-tomorrow = today + timedelta(days=1)
-weekday = tomorrow.strftime('%A')
+
 
 with open("machine_learning_for_weather_forecast/new_forecast.json", 'w') as json_f:
     json_f.write("{\n")

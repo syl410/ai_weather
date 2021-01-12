@@ -38,7 +38,7 @@ response.json format:
 }
 """
 
-def collect_data_func(collect_times, year, month, day, file_output, force_restart, isWeb):
+def collect_data_func(collect_times, year, month, day, file_output, force_restart, isWeb, isReboot):
     """request weather data from 'darksky' website , 
        collect useful feature data and load them in pkl file
 
@@ -77,9 +77,17 @@ def collect_data_func(collect_times, year, month, day, file_output, force_restar
     # 1, start_date is later than today
     # 2, end_day is later than today
     today = datetime(now.year, now.month, now.day)
+    # if isReboot, predict today instead of tomorrow
+    if isReboot:
+        today = today - timedelta(days=1)
     end_day = start_date + timedelta(days=(collect_times - 1))
     if start_date > today:
         print(f'start_date {start_date} is later than today {today}')
+        # for web app, one more day will be collected as dummy data to use date and daytime easily
+        if isWeb:
+            start_date = today + timedelta(days=(1))
+            # collect new weather data and add it into historical_data
+            historical_data = historical_data.append(collect_weather_data(BASE_URL, start_date, 1), ignore_index=True)
     else:
         if end_day > today:
             collect_times = (today - start_date).days + 1 # +1 means if start_date is today, we still need to collect
