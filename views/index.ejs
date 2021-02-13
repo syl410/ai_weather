@@ -15,33 +15,34 @@
     </p>
     <p style="font-size: 80%; color: grey"> - Weather predicted at 23:01 <%=weather_info.updated_date%></p>
 
-    <p >Actual weather for comparison: <a href="https://darksky.net/forecast/30.2711,-97.7437/us12/en">Dark Sky</a></p>
+    <p>Real time weather for comparison: <a href="https://darksky.net/forecast/30.2711,-97.7437/us12/en">Dark Sky</a></p>
     <br>
     <br>
     <p style="font-size: 100%">
-        AI-Weather provides weather forecast for Austin using neural network model (machine learning). <br> 
+        AI-Weather provides weather forecast for Austin using a neural network model (machine learning). <br>
         The training data for the model are collected from Austin and its surrouding cities.</p>
     <p>
         <img class="img-responsive thumbnail" width="800" src="/picture/fiveCity.png" alt="five cities">
     </p>
-    
+   
 	<br>
 	<p style="font-size: 130%"><b>Prediction accuracy</b></p>
 	<ul style="font-size: 100%">
-		<li >Mean of difference between prediction max temperature and actual max temperature is 3.5°F (1.9°C)</li>
-		<li >Mean of difference between prediction max temperature and actual max temperature is 2.9°F (1.6°C)</li>
+		<li >Mean of difference between predicted max temperature and actual max temperature is 3.5°F (1.9°C)</li>
+		<li >Mean of difference between predicted max temperature and actual max temperature is 2.9°F (1.6°C)</li>
 		<li >Weather (clear, cloud, rain, etc.) prediction accuracy is 65%</li>
 	</ul>
-	
-	<br>
-	<p style="font-size: 130%"><b>Compared with other professional weather webs</b></p>
-	<p>These are quoted from a <a href="https://theoutline.com/post/3826/crap-weather-apps-meteorolgists?zd=1&zi=3pfkmqes">post</a></p>
-	<p>"...for one to three day forecasts...The Weather Channel, and Accuweather, which are accurate about 75 percent of the time..."</p>
-	<p>"...Dark Sky and World Weather Online are accurate 64 to 67 percent of the time..."</p>
-	
     <p>
         <img class="img-responsive thumbnail" width="800" src="/picture/performance.png" alt="performance">
     </p>
+	<br>
+	<p style="font-size: 130%"><b>Compared with other professional weather webs</b></p>
+	    <p>Below is quoted from a <a href="https://www.e-education.psu.edu/meteo3/node/2285">PennState College article</a>:</p>
+	    <p>"Temperature forecasts ... have absolute errors of 3 degrees Fahrenheit or less ... a couple of days into the future"</p>
+	    
+	    <p>Below are quoted from an <a href="https://theoutline.com/post/3826/crap-weather-apps-meteorolgists?zd=1&zi=3pfkmqes">an online publication</a>:</p>
+	    <p>"...for one to three day forecasts...The Weather Channel, and Accuweather, which are accurate about 75 percent of the time..."</p>
+	    <p>"...Dark Sky and World Weather Online are accurate 64 to 67 percent of the time..."</p>
 
 </div>
 <% include ./partials/footer %>
