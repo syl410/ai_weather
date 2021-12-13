@@ -33,7 +33,7 @@ jsonschema==2.6.0
 keyring==10.6.0
 keyrings.alt==3.0
 lazy-object-proxy==1.4.2
-lxml==4.2.1
+lxml==4.6.5
 matplotlib==2.1.1
 mccabe==0.6.1
 netifaces==0.10.4
