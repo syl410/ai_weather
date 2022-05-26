@@ -74,7 +74,7 @@ six==1.14.0
 stevedore==1.31.0
 systemd-python==234
 tables==3.4.2
-Twisted==17.9.0
+Twisted==22.4.0
 urllib3==1.22
 virtualenv==16.2.0
 virtualenv-clone==0.5.3
